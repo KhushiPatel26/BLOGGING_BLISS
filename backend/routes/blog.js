@@ -1,21 +1,13 @@
+// blog.js (Blog and Comment endpoints)
 const express = require('express');
 const router = express.Router();
 const db = require('../db');
 
-// Middleware to check if user is logged in
-const isAuthenticated = (req, res, next) => {
-  if (!req.session.userId) {
-    return res.status(401).json({ error: 'Unauthorized' });
-  }
-  next();
-};
-
-// ----------------------
-// BLOG ENDPOINTS
-// ----------------------
-
 // Create a new blog
-router.post('/blogs', isAuthenticated, (req, res) => {
+router.post('/blogs', (req, res) => {
+  if (!req.session.userId) {
+    return res.status(401).json({ error: 'Unauthorized access. User is not logged in.' });
+  }
   const { title, content, visibility } = req.body;
   const sql = `INSERT INTO blogs (title, content, visibility, userId) VALUES (?, ?, ?, ?)`;
   db.query(sql, [title, content, visibility, req.session.userId], (err, result) => {
@@ -65,7 +57,10 @@ router.get('/blogs/:id', (req, res) => {
 });
 
 // Update a blog by id (only if the logged-in user is the author)
-router.put('/blogs/:id', isAuthenticated, (req, res) => {
+router.put('/blogs/:id', (req, res) => {
+  if (!req.session.userId) {
+    return res.status(401).json({ error: 'Unauthorized access. User is not logged in.' });
+  }
   const blogId = req.params.id;
   const { title, content, visibility } = req.body;
 
@@ -92,7 +87,10 @@ router.put('/blogs/:id', isAuthenticated, (req, res) => {
 });
 
 // Delete a blog by id (only if the logged-in user is the author)
-router.delete('/blogs/:id', isAuthenticated, (req, res) => {
+router.delete('/blogs/:id', (req, res) => {
+  if (!req.session.userId) {
+    return res.status(401).json({ error: 'Unauthorized access. User is not logged in.' });
+  }
   const blogId = req.params.id;
   const checkSql = 'SELECT * FROM blogs WHERE id = ? AND userId = ?';
   db.query(checkSql, [blogId, req.session.userId], (err, results) => {
@@ -116,11 +114,13 @@ router.delete('/blogs/:id', isAuthenticated, (req, res) => {
 });
 
 // Retrieve blogs for the authenticated user
-router.get('/users/:userId/blogs', isAuthenticated, (req, res) => {
+router.get('/users/:userId/blogs', (req, res) => {
+  if (!req.session.userId) {
+    return res.status(401).json({ error: 'Unauthorized access. User is not logged in.' });
+  }
   // We use the session's userId to ensure the user only sees their own blogs
-  const userId = req.session.userId;
   const sql = 'SELECT id, title, content, created_at FROM blogs WHERE userId = ? ORDER BY created_at DESC';
-  db.query(sql, [userId], (err, blogs) => {
+  db.query(sql, [req.session.userId], (err, blogs) => {
     if (err) {
       console.error('Error fetching user blogs:', err);
       return res.status(500).json({ error: 'Error fetching blogs.' });
@@ -134,7 +134,10 @@ router.get('/users/:userId/blogs', isAuthenticated, (req, res) => {
 // ----------------------
 
 // Save a comment for a blog
-router.post('/blogs/:id/comments', isAuthenticated, (req, res) => {
+router.post('/blogs/:id/comments', (req, res) => {
+  if (!req.session.userId) {
+    return res.status(401).json({ error: 'Unauthorized access. User is not logged in.' });
+  }
   const blogId = req.params.id;
   const { content } = req.body;
   const sql = `INSERT INTO comments (userId, blogId, content) VALUES (?, ?, ?)`;
