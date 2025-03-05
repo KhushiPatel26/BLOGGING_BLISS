@@ -25,7 +25,6 @@
 
   <script src="src/config.js"></script>
   <script>
-
     document.getElementById('loginForm').addEventListener('submit', function(event) {
       event.preventDefault();
       const email = document.getElementById('email').value;
@@ -44,21 +43,22 @@
         return;
       }
 
+      // API call for login (POST /api/login)
       fetch(`${API_BASE_URL}/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
         body: JSON.stringify({ email, password })
       })
-        .then(response => {
-          if (response.ok) {
-            showMessage('Login successful!', 'alert-success');
-            window.location.href = 'home.html';
-          } else {
-            return response.text().then(text => showMessage(text, 'alert-danger'));
-          }
-        })
-        .catch(error => showMessage('Error during login: ' + error.message, 'alert-danger'));
+      .then(response => {
+        if (response.ok) {
+          showMessage('Login successful!', 'alert-success');
+          window.location.href = 'home.html';
+        } else {
+          return response.text().then(text => showMessage(text, 'alert-danger'));
+        }
+      })
+      .catch(error => showMessage('Error during login: ' + error.message, 'alert-danger'));
     });
 
     function showMessage(message, alertClass) {
