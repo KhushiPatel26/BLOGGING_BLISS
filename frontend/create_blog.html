@@ -1,82 +1,80 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Create New Blog - Blogging Bliss</title>
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Create New Blog - Blogging Bliss</title>
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" />
 </head>
 <body>
-    <div class="container">
-        <h1>Create New Blog</h1>
-        <form action="/api/blogs" method="POST">
-            <div class="form-group">
-                <label for="title">Title:</label>
-                <input type="text" class="form-control" id="title" name="title" required>
-            </div>
-            <div class="form-group">
-                <label for="content">Content:</label>
-                <textarea class="form-control" id="content" name="content" required></textarea>
-            </div>
-            <div class="form-group">
-                <label for="visibility">Visibility:</label>
-                <select class="form-control" id="visibility" name="visibility">
-                    <option value="public">Public</option>
-                    <option value="private">Private</option>
-                </select>
-            </div>
-            <button type="submit" class="btn btn-primary">Create Blog</button>
-        </form>
-    </div>
+  <div class="container">
+    <h1>Create New Blog</h1>
+    <!-- Message display -->
+    <div id="message" class="alert" style="display: none;"></div>
+    <!-- Added id for JS handling -->
+    <form id="createBlogForm" method="POST">
+      <div class="form-group">
+        <label for="title">Title:</label>
+        <input type="text" class="form-control" id="title" name="title" required />
+      </div>
+      <div class="form-group">
+        <label for="content">Content:</label>
+        <textarea class="form-control" id="content" name="content" required></textarea>
+      </div>
+      <div class="form-group">
+        <label for="visibility">Visibility:</label>
+        <select class="form-control" id="visibility" name="visibility">
+          <option value="public">Public</option>
+          <option value="private">Private</option>
+        </select>
+      </div>
+      <button type="submit" class="btn btn-primary">Create Blog</button>
+    </form>
+  </div>
 
-    <script>
-        document.getElementById('createBlogForm').addEventListener('submit', function(event) {
-            event.preventDefault(); // Prevent default form submission
+  <script>
+    // Define the Render API base URL
+    const API_BASE_URL = "https://blogging-bliss.onrender.com/api";
 
-            const title = document.getElementById('title').value;
-            const content = document.getElementById('content').value;
-            const visibility = document.getElementById('visibility').value;
-            // Create blog data object
-            const blogData = {
-                title: title,
-                content: content,
-                visibility: visibility
-            };
+    document.getElementById('createBlogForm').addEventListener('submit', function(event) {
+      event.preventDefault();
 
-            // Send the blog data to the server
-            fetch('/api/blogs', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(blogData)
-            })
-            .then(response => {
-                if (response.ok) {
-                    // Blog created successfully
-                    document.getElementById('message').innerText = 'Blog created successfully!';
-                    document.getElementById('message').className = 'alert alert-success';
-                    document.getElementById('message').style.display = 'block';
-                    // Redirect to profile page after a short delay
-                    setTimeout(() => {
-                        window.location.href = 'profile.html'; // Adjust path if necessary
-                    }, 2000);
-                } else {
-                    return response.text().then(text => {
-                        document.getElementById('message').innerText = text;
-                        document.getElementById('message').className = 'alert alert-danger';
-                        document.getElementById('message').style.display = 'block';
-                    });
-                }
-            })
-            .catch(error => {
-                console.error('Error creating blog:', error);
-                document.getElementById('message').innerText = 'Error during blog creation.';
-                document.getElementById('message').className = 'alert alert-danger';
-                document.getElementById('message').style.display = 'block';
+      const title = document.getElementById('title').value;
+      const content = document.getElementById('content').value;
+      const visibility = document.getElementById('visibility').value;
+
+      const blogData = { title, content, visibility };
+
+      // Use the full Render API URL with credentials
+      fetch(`${API_BASE_URL}/blogs`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(blogData)
+      })
+        .then(response => {
+          if (response.ok) {
+            document.getElementById('message').innerText = 'Blog created successfully!';
+            document.getElementById('message').className = 'alert alert-success';
+            document.getElementById('message').style.display = 'block';
+            setTimeout(() => {
+              window.location.href = 'profile.html';
+            }, 2000);
+          } else {
+            return response.text().then(text => {
+              document.getElementById('message').innerText = text;
+              document.getElementById('message').className = 'alert alert-danger';
+              document.getElementById('message').style.display = 'block';
             });
+          }
+        })
+        .catch(error => {
+          console.error('Error creating blog:', error);
+          document.getElementById('message').innerText = 'Error during blog creation.';
+          document.getElementById('message').className = 'alert alert-danger';
+          document.getElementById('message').style.display = 'block';
         });
-    </script>
-
+    });
+  </script>
 </body>
 </html>

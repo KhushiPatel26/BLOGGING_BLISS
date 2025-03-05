@@ -1,372 +1,262 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>User Profile - Blogging Bliss</title>
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>User Profile - Blogging Bliss</title>
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" />
 </head>
 <body>
-    <div class="container"><br>
-        <button onclick="window.location.href='home.html'" class="btn btn-primary"><i class="fas fa-arrow-left"></i> Back to Home</button><br>
-        <h1>User Profile</h1>
-        <div>
-            <p><strong>Name:</strong> <span id="userName">Loading...</span></p>
-            <p><strong>Email:</strong> <span id="userEmail">Loading...</span></p>
-            <p><strong>Phone Number:</strong> <span id="userPhone">Loading...</span></p>
-            <p><strong>Date of Birth:</strong> <span id="userDob">Loading...</span></p>
-            <button id="editButton" class="btn btn-warning mt-3" data-toggle="modal" data-target="#editModal">Edit</button>
-            <button id="changePasswordButton" class="btn btn-info mt-3" data-toggle="modal" data-target="#changePasswordModal">Change Password</button>
-        </div>
-        <br>
-        <h2>Your Blogs</h2><br>
-        <a href="create_blog.html" class="btn btn-info mb-3">Create New Blog</a><br>
-        <div id="userBlogs" class="row"></div>
-        <br>
-        <button id="logoutButton" class="btn btn-danger mt-3">Logout</button>
+  <div class="container"><br>
+    <button onclick="window.location.href='home.html'" class="btn btn-primary">
+      <i class="fas fa-arrow-left"></i> Back to Home
+    </button><br>
+    <h1>User Profile</h1>
+    <div>
+      <p><strong>Name:</strong> <span id="userName">Loading...</span></p>
+      <p><strong>Email:</strong> <span id="userEmail">Loading...</span></p>
+      <p><strong>Phone Number:</strong> <span id="userPhone">Loading...</span></p>
+      <p><strong>Date of Birth:</strong> <span id="userDob">Loading...</span></p>
+      <button id="editButton" class="btn btn-warning mt-3" data-toggle="modal" data-target="#editModal">Edit</button>
+      <button id="changePasswordButton" class="btn btn-info mt-3" data-toggle="modal" data-target="#changePasswordModal">Change Password</button>
     </div>
+    <br>
+    <h2>Your Blogs</h2><br>
+    <a href="create_blog.html" class="btn btn-info mb-3">Create New Blog</a><br>
+    <div id="userBlogs" class="row"></div>
+    <br>
+    <button id="logoutButton" class="btn btn-danger mt-3">Logout</button>
+  </div>
 
-    <!-- Edit Modal -->
-    <div class="modal fade" id="editModal" tabindex="-1" role="dialog" aria-labelledby="editModalLabel" aria-hidden="true">
-        <div class="modal-dialog" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="editModalLabel">Edit Profile</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-                <div class="modal-body">
-                    <form id="editForm">
-                        <div class="form-group">
-                            <label for="editName">Name:</label>
-                            <input type="text" class="form-control" id="editName" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="editEmail">Email:</label>
-                            <input type="email" class="form-control" id="editEmail" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="editPhone">Phone:</label>
-                            <input type="text" class="form-control" id="editPhone" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="editDob">Date of Birth:</label>
-                            <input type="date" class="form-control" id="editDob" required>
-                        </div>
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                    <button type="button" class="btn btn-primary" id="saveChanges">Save changes</button>
-                </div>
+  <!-- Edit Modal -->
+  <div class="modal fade" id="editModal" tabindex="-1" role="dialog" aria-labelledby="editModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="editModalLabel">Edit Profile</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <form id="editForm">
+            <div class="form-group">
+              <label for="editName">Name:</label>
+              <input type="text" class="form-control" id="editName" required />
             </div>
-        </div>
-    </div>
-
-    <!-- Change Password Modal -->
-    <div class="modal fade" id="changePasswordModal" tabindex="-1" role="dialog" aria-labelledby="changePasswordModalLabel" aria-hidden="true">
-        <div class="modal-dialog" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="changePasswordModalLabel">Change Password</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-                <div class="modal-body">
-                    <form id="changePasswordForm">
-                        <div class="form-group">
-                            <label for="currentPassword">Current Password:</label>
-                            <input type="password" class="form-control" id="currentPassword" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="newPassword">New Password:</label>
-                            <input type="password" class="form-control" id="newPassword" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="confirmNewPassword">Confirm New Password:</label>
-                            <input type="password" class="form-control" id="confirmNewPassword" required>
-                        </div>
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                    <button type="button" class="btn btn-primary" id="changePassword">Change Password</button>
-                </div>
+            <div class="form-group">
+              <label for="editEmail">Email:</label>
+              <input type="email" class="form-control" id="editEmail" required />
             </div>
+            <div class="form-group">
+              <label for="editPhone">Phone:</label>
+              <input type="text" class="form-control" id="editPhone" required />
+            </div>
+            <div class="form-group">
+              <label for="editDob">Date of Birth:</label>
+              <input type="date" class="form-control" id="editDob" required />
+            </div>
+          </form>
         </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+          <button type="button" class="btn btn-primary" id="saveChanges">Save changes</button>
+        </div>
+      </div>
     </div>
+  </div>
 
-    <script>
-        // Fetch user information on page load
-        fetch('/api/profile')
-            .then(response => response.json())
-            .then(user => {
-                // Populate user details
-                document.getElementById('userName').innerText = user.name;
-                document.getElementById('userEmail').innerText = user.email;
-                document.getElementById('userPhone').innerText = user.phone;
+  <!-- Change Password Modal -->
+  <div class="modal fade" id="changePasswordModal" tabindex="-1" role="dialog" aria-labelledby="changePasswordModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="changePasswordModalLabel">Change Password</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <form id="changePasswordForm">
+            <div class="form-group">
+              <label for="currentPassword">Current Password:</label>
+              <input type="password" class="form-control" id="currentPassword" required />
+            </div>
+            <div class="form-group">
+              <label for="newPassword">New Password:</label>
+              <input type="password" class="form-control" id="newPassword" required />
+            </div>
+            <div class="form-group">
+              <label for="confirmNewPassword">Confirm New Password:</label>
+              <input type="password" class="form-control" id="confirmNewPassword" required />
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+          <button type="button" class="btn btn-primary" id="changePassword">Change Password</button>
+        </div>
+      </div>
+    </div>
+  </div>
 
-                // Format and display the date of birth
-                const dob = new Date(user.dob);
-                document.getElementById('userDob').innerText = dob.toLocaleDateString('en-CA'); // Display as YYYY-MM-DD
+  <script>
+    const API_BASE_URL = "https://blogging-bliss.onrender.com/api";
 
-                // Fill edit modal fields
-                document.getElementById('editName').value = user.name;
-                document.getElementById('editEmail').value = user.email;
-                document.getElementById('editPhone').value = user.phone;
-                document.getElementById('editDob').value = dob.toISOString().split('T')[0]; // Format as YYYY-MM-DD for input
+    // Fetch user profile
+    fetch(`${API_BASE_URL}/profile`, { credentials: 'include' })
+      .then(response => response.json())
+      .then(user => {
+        document.getElementById('userName').innerText = user.name;
+        document.getElementById('userEmail').innerText = user.email;
+        document.getElementById('userPhone').innerText = user.phone;
+        const dob = new Date(user.dob);
+        document.getElementById('userDob').innerText = dob.toLocaleDateString('en-CA');
 
-                // Fetch user's blogs
-                fetchUserBlogs(user.id);
-            })
-            .catch(error => console.error('Error fetching user data:', error));
+        // Pre-fill edit modal
+        document.getElementById('editName').value = user.name;
+        document.getElementById('editEmail').value = user.email;
+        document.getElementById('editPhone').value = user.phone;
+        document.getElementById('editDob').value = dob.toISOString().split('T')[0];
 
+        fetchUserBlogs(user.id);
+      })
+      .catch(error => console.error('Error fetching user data:', error));
 
-        // Handle save changes in edit modal
-        document.getElementById('saveChanges').addEventListener('click', () => {
-            const updatedUser = {
-                name: document.getElementById('editName').value,
-                email: document.getElementById('editEmail').value,
-                phone: document.getElementById('editPhone').value,
-                dob: document.getElementById('editDob').value
-            };
-
-            // Validate inputs before sending
-            if (!validateEmail(updatedUser.email)) {
-                alert('Invalid email format.');
-                return;
-            }
-            if (!validatePhone(updatedUser.phone)) {
-                alert('Invalid phone number format.');
-                return;
-            }
-
-            // Send updated user information to the server
-            fetch('/api/profile', {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(updatedUser)
-            })
-            .then(response => {
-                if (response.ok) {
-                    alert('Profile updated successfully!');
-                    location.reload(); // Reload to reflect changes
-                } else {
-                    alert('Error updating profile.');
-                }
-            })
-            .catch(error => console.error('Error updating user data:', error));
-        });
-
-        // Handle change password
-        document.getElementById('changePassword').addEventListener('click', () => {
-            const currentPassword = document.getElementById('currentPassword').value;
-            const newPassword = document.getElementById('newPassword').value;
-            const confirmNewPassword = document.getElementById('confirmNewPassword').value;
-
-            // Validate new password
-            if (newPassword !== confirmNewPassword) {
-                alert('New passwords do not match.');
-                return;
-            }
-            if (!validatePassword(newPassword)) {
-                alert('New password must be at least 6 characters long.');
-                return;
-            }
-
-            // Send change password request
-            fetch('/api/change-password', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ currentPassword, newPassword })
-            })
-            .then(response => {
-                if (response.ok) {
-                    alert('Password changed successfully!');
-                    // Optionally close the modal here or reload the page
-                    $('#changePasswordModal').modal('hide'); // Using jQuery to hide the modal
-                } else {
-                    return response.text().then(text => alert(text));
-                }
-            })
-            .catch(error => console.error('Error changing password:', error));
-        });
-
-        function validateEmail(email) {
-            const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            return re.test(email);
-        }
-
-        function validatePhone(phone) {
-            const re = /^\d{10}$/; // Adjust as necessary for your phone format
-            return re.test(phone);
-        }
-
-        function validatePassword(password) {
-            return password.length >= 6; // Minimum password length
-        }
-
-        // Function to fetch user's blogs
-        function fetchUserBlogs(userId) {
-            fetch(`/api/users/${userId}/blogs`) // Ensure you create this endpoint
-                .then(response => {
-                    if (response.status === 401) {
-                        alert('You are not logged in. Redirecting to login page.');
-                        window.location.href = 'login.html'; // Redirect to login page
-                    } else if (!response.ok) {
-                        throw new Error('Failed to fetch user information');
-                    }
-                    return response.json();
-                })
-                .then(blogs => {
-                    const userBlogsContainer = document.getElementById('userBlogs');
-                    userBlogsContainer.innerHTML = ''; // Clear previous blogs
-                    
-                    // Check if blogs exist and are in the expected format
-                    if (Array.isArray(blogs) && blogs.length > 0) {
-                        blogs.forEach(blog => {
-                            // Defensive coding to check if title and content exist
-                            const title = blog.title || 'Untitled'; // Default to 'Untitled' if title is null or undefined
-                            const content = blog.content || 'No content available'; // Default message if content is null
-                    
-                            const blogCard = `
-                                <div class="col-md-4">
-                                    <div class="card mb-4">
-                                        <div class="card-body">
-                                            <h5>${title}</h5>
-                                            <p>${content.substring(0, 100)}...</p>
-                                            <a href="view_blog.html?id=${blog.id}" class="btn btn-primary">Read More</a>
-                                        </div>
-                                    </div>
-                                </div>
-                            `;
-                            userBlogsContainer.innerHTML += blogCard; // Append blog card to the container
-                        });
-                    } else {
-                        userBlogsContainer.innerHTML = '<p>No blogs available.</p>'; // Message if no blogs found
-                    }
-                })
-                .catch(error => console.error('Error fetching user blogs:', error));
-        }
-
-        // Handle save changes in edit modal
-        document.getElementById('saveChanges').addEventListener('click', () => {
-            const updatedUser = {
-                name: document.getElementById('editName').value,
-                email: document.getElementById('editEmail').value,
-                phone: document.getElementById('editPhone').value,
-                dob: document.getElementById('editDob').value
-            };
-
-            // Validate inputs before sending
-            if (!validateEmail(updatedUser.email)) {
-                alert('Invalid email format.');
-                return;
-            }
-            if (!validatePhone(updatedUser.phone)) {
-                alert('Invalid phone number format.');
-                return;
-            }
-
-            // Send updated user information to the server
-            fetch('/api/profile', {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(updatedUser)
-            })
-            .then(response => {
-                if (response.ok) {
-                    alert('Profile updated successfully!');
-                    location.reload(); // Reload to reflect changes
-                } else {
-                    alert('Error updating profile.');
-                }
-            })
-            .catch(error => console.error('Error updating user data:', error));
-        });
-
-        // Handle change password
-        document.getElementById('changePassword').addEventListener('click', () => {
-            const name = document.getElementById('userName').innerText;
-            const email = document.getElementById('userEmail').innerText;
-            const phone = document.getElementById('userPhone').innerText;
-            const dob = document.getElementById('userDob').innerText;
-
-            // Show a dialog for editing user data
-            swal({
-                title: "Edit Profile",
-                text: `
-                    <form id="editForm">
-                        <label for="editName">Name:</label><br>
-                        <input type="text" id="editName" value="${name}"><br>
-                        <label for="editEmail">Email:</label><br>
-                        <input type="email" id="editEmail" value="${email}"><br>
-                        <label for="editPhone">Phone:</label><br>
-                        <input type="text" id="editPhone" value="${phone}"><br>
-                        <label for="editDob">Date of Birth:</label><br>
-                        <input type="date" id="editDob" value="${dob}"><br>
-                    </form>
-                `,
-                html: true,
-                showCancelButton: true,
-                confirmButtonText: "Save Changes",
-                cancelButtonText: "Cancel",
-                closeOnConfirm: false,
-                closeOnCancel: true,
-            }, function(isConfirm) {
-                if (isConfirm) {
-                    const updatedUser = {
-                        name: document.getElementById('editName').value,
-                        email: document.getElementById('editEmail').value,
-                        phone: document.getElementById('editPhone').value,
-                        dob: document.getElementById('editDob').value
-                    };
-                    // Send updated user information to the server
-                    fetch('/api/profile', {
-                        method: 'PUT',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify(updatedUser)
-                    })
-                    .then(response => {
-                        if (response.ok) {
-                            swal("Success", "Profile updated successfully!", "success");
-                            location.reload(); // Reload to reflect changes
-                        } else {
-                            swal("Error", "Error updating profile.", "error");
-                        }
-                    })
-                    .catch(error => console.error('Error updating user data:', error));
-                }
+    function fetchUserBlogs(userId) {
+      fetch(`${API_BASE_URL}/users/${userId}/blogs`, { credentials: 'include' })
+        .then(response => {
+          if (response.status === 401) {
+            alert('You are not logged in. Redirecting to login page.');
+            window.location.href = 'login.html';
+          } else if (!response.ok) {
+            throw new Error('Failed to fetch user blogs');
+          }
+          return response.json();
+        })
+        .then(blogs => {
+          const userBlogsContainer = document.getElementById('userBlogs');
+          userBlogsContainer.innerHTML = '';
+          if (Array.isArray(blogs) && blogs.length > 0) {
+            blogs.forEach(blog => {
+              const title = blog.title || 'Untitled';
+              const content = blog.content || 'No content available';
+              const blogCard = `
+                <div class="col-md-4">
+                  <div class="card mb-4">
+                    <div class="card-body">
+                      <h5>${title}</h5>
+                      <p>${content.substring(0, 100)}...</p>
+                      <a href="view_blog.html?id=${blog.id}" class="btn btn-primary">Read More</a>
+                    </div>
+                  </div>
+                </div>
+              `;
+              userBlogsContainer.innerHTML += blogCard;
             });
-        });
+          } else {
+            userBlogsContainer.innerHTML = '<p>No blogs available.</p>';
+          }
+        })
+        .catch(error => console.error('Error fetching user blogs:', error));
+    }
 
-        // Logout functionality
-        document.getElementById('logoutButton').addEventListener('click', () => {
-            fetch('/api/logout', {
-                method: 'POST'
-            })
-            .then(response => {
-                if (response.ok) {
-                    window.location.href = 'login.html'; // Redirect to login page
-                } else {
-                    alert('Error logging out.');
-                }
-            })
-            .catch(error => console.error('Error logging out:', error));
-        });
-    </script>
-    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.0.7/dist/umd/popper.min.js"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    document.getElementById('saveChanges').addEventListener('click', () => {
+      const updatedUser = {
+        name: document.getElementById('editName').value,
+        email: document.getElementById('editEmail').value,
+        phone: document.getElementById('editPhone').value,
+        dob: document.getElementById('editDob').value
+      };
+
+      if (!validateEmail(updatedUser.email)) {
+        alert('Invalid email format.');
+        return;
+      }
+      if (!validatePhone(updatedUser.phone)) {
+        alert('Invalid phone number format.');
+        return;
+      }
+
+      fetch(`${API_BASE_URL}/profile`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(updatedUser)
+      })
+        .then(response => {
+          if (response.ok) {
+            alert('Profile updated successfully!');
+            location.reload();
+          } else {
+            alert('Error updating profile.');
+          }
+        })
+        .catch(error => console.error('Error updating user data:', error));
+    });
+
+    document.getElementById('changePassword').addEventListener('click', () => {
+      const currentPassword = document.getElementById('currentPassword').value;
+      const newPassword = document.getElementById('newPassword').value;
+      const confirmNewPassword = document.getElementById('confirmNewPassword').value;
+
+      if (newPassword !== confirmNewPassword) {
+        alert('New passwords do not match.');
+        return;
+      }
+      if (!validatePassword(newPassword)) {
+        alert('New password must be at least 6 characters long.');
+        return;
+      }
+
+      fetch(`${API_BASE_URL}/change-password`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ currentPassword, newPassword })
+      })
+        .then(response => {
+          if (response.ok) {
+            alert('Password changed successfully!');
+            $('#changePasswordModal').modal('hide');
+          } else {
+            return response.text().then(text => alert(text));
+          }
+        })
+        .catch(error => console.error('Error changing password:', error));
+    });
+
+    function validateEmail(email) {
+      const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      return re.test(email);
+    }
+
+    function validatePhone(phone) {
+      const re = /^\d{10}$/;
+      return re.test(phone);
+    }
+
+    function validatePassword(password) {
+      return password.length >= 6;
+    }
+
+    document.getElementById('logoutButton').addEventListener('click', () => {
+      fetch(`${API_BASE_URL}/logout`, {
+        method: 'POST',
+        credentials: 'include'
+      })
+        .then(response => {
+          if (response.ok) {
+            window.location.href = 'login.html';
+          } else {
+            alert('Error logging out.');
+          }
+        })
+        .catch(error => console.error('Error logging out:', error));
+    });
+  </script>
+  <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.0.7/dist/umd/popper.min.js"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 </body>
 </html>
