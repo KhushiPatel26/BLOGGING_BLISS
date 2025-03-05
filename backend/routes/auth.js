@@ -1,18 +1,16 @@
-// auth.js (User endpoints)
+// auth.js
 const express = require('express');
 const router = express.Router();
 const db = require('../db');
+const sessions = require('./sessions');
+const crypto = require('crypto'); // used to generate session IDs
 
-// Signup endpoint
+// Signup endpoint (unchanged)
 router.post('/signup', (req, res) => {
   const { name, email, password, phone, dob } = req.body;
-
-  // Validate input fields
   if (!name || !email || !password || !phone || !dob) {
     return res.status(400).json({ error: 'All fields are required.' });
   }
-
-  // Check if the email already exists
   const checkEmailSql = 'SELECT * FROM users WHERE email = ?';
   db.query(checkEmailSql, [email], (err, results) => {
     if (err) {
@@ -22,8 +20,6 @@ router.post('/signup', (req, res) => {
     if (results.length > 0) {
       return res.status(400).json({ error: 'Email already in use.' });
     }
-
-    // Insert the new user if email does not exist
     const sql = 'INSERT INTO users (name, email, password, phone, dob) VALUES (?, ?, ?, ?, ?)';
     db.query(sql, [name, email, password, phone, dob], (err, result) => {
       if (err) {
@@ -38,13 +34,9 @@ router.post('/signup', (req, res) => {
 // Login endpoint
 router.post('/login', (req, res) => {
   const { email, password } = req.body;
-
-  // Validate input fields
   if (!email || !password) {
     return res.status(400).json({ error: 'Email and password are required.' });
   }
-
-  // Find the user by email
   const sql = 'SELECT * FROM users WHERE email = ?';
   db.query(sql, [email], (err, results) => {
     if (err) {
@@ -54,27 +46,27 @@ router.post('/login', (req, res) => {
     if (results.length === 0) {
       return res.status(401).json({ error: 'User not found.' });
     }
-
     const user = results[0];
-
-    // Validate password (remember to hash passwords in production)
     if (user.password !== password) {
       return res.status(401).json({ error: 'Invalid password.' });
     }
-
-    // Set session and respond
-    req.session.userId = user.id;
-    res.json({ message: 'Login successful', userId: user.id });
+    // Generate a basic session ID (no extra security)
+    const sessionId = crypto.randomBytes(16).toString('hex');
+    sessions[sessionId] = user.id;
+    // Return the session ID in the response (visible in frontend)
+    res.json({ message: 'Login successful', userId: user.id, sessionId });
   });
 });
 
 // Fetch user profile
 router.get('/profile', (req, res) => {
-  if (!req.session.userId) {
-    return res.status(401).json({ error: 'Unauthorized access. User is not logged in.' });
+  const sessionId = req.query.sessionId;
+  if (!sessionId || !sessions[sessionId]) {
+    return res.status(401).json({ error: 'Unauthorized access. No valid session.' });
   }
+  const userId = sessions[sessionId];
   const sql = 'SELECT id, name, email, phone, dob FROM users WHERE id = ?';
-  db.query(sql, [req.session.userId], (err, results) => {
+  db.query(sql, [userId], (err, results) => {
     if (err) {
       console.error('Error fetching user profile:', err);
       return res.status(500).json({ error: 'Error fetching user information.' });
@@ -86,22 +78,22 @@ router.get('/profile', (req, res) => {
   });
 });
 
-// Update user profile (returns updated data for immediate display)
+// Update user profile
 router.put('/profile', (req, res) => {
-  if (!req.session.userId) {
-    return res.status(401).json({ error: 'Unauthorized access. User is not logged in.' });
+  const sessionId = req.query.sessionId;
+  if (!sessionId || !sessions[sessionId]) {
+    return res.status(401).json({ error: 'Unauthorized access. No valid session.' });
   }
+  const userId = sessions[sessionId];
   const { name, email, phone, dob } = req.body;
   const sql = 'UPDATE users SET name = ?, email = ?, phone = ?, dob = ? WHERE id = ?';
-  
-  db.query(sql, [name, email, phone, dob, req.session.userId], (err) => {
+  db.query(sql, [name, email, phone, dob, userId], (err) => {
     if (err) {
       console.error('Error updating user information:', err);
       return res.status(500).json({ error: 'Error updating user information.' });
     }
-    // Fetch updated profile data
     const selectSql = 'SELECT id, name, email, phone, dob FROM users WHERE id = ?';
-    db.query(selectSql, [req.session.userId], (err, results) => {
+    db.query(selectSql, [userId], (err, results) => {
       if (err) {
         console.error('Error fetching updated user profile:', err);
         return res.status(500).json({ error: 'User updated but error fetching updated info.' });
@@ -116,14 +108,14 @@ router.put('/profile', (req, res) => {
 
 // Change password
 router.post('/change-password', (req, res) => {
-  if (!req.session.userId) {
-    return res.status(401).json({ error: 'Unauthorized access. User is not logged in.' });
+  const sessionId = req.query.sessionId;
+  if (!sessionId || !sessions[sessionId]) {
+    return res.status(401).json({ error: 'Unauthorized access. No valid session.' });
   }
+  const userId = sessions[sessionId];
   const { currentPassword, newPassword } = req.body;
-
-  // Check if the current password is correct
   const sql = 'SELECT * FROM users WHERE id = ?';
-  db.query(sql, [req.session.userId], (err, results) => {
+  db.query(sql, [userId], (err, results) => {
     if (err) {
       console.error('Error fetching user for password change:', err);
       return res.status(500).json({ error: 'Error occurred during password change.' });
@@ -131,16 +123,12 @@ router.post('/change-password', (req, res) => {
     if (results.length === 0) {
       return res.status(404).json({ error: 'User not found.' });
     }
-
     const user = results[0];
-
     if (user.password !== currentPassword) {
       return res.status(401).json({ error: 'Current password is incorrect.' });
     }
-
-    // Update the password
     const updateSql = 'UPDATE users SET password = ? WHERE id = ?';
-    db.query(updateSql, [newPassword, req.session.userId], (err) => {
+    db.query(updateSql, [newPassword, userId], (err) => {
       if (err) {
         console.error('Error updating password:', err);
         return res.status(500).json({ error: 'Error occurred during password change.' });
@@ -152,13 +140,11 @@ router.post('/change-password', (req, res) => {
 
 // Logout endpoint
 router.post('/logout', (req, res) => {
-  req.session.destroy(err => {
-    if (err) {
-      console.error('Error logging out:', err);
-      return res.status(500).json({ error: 'Error logging out.' });
-    }
-    res.json({ message: 'Logged out successfully.' });
-  });
+  const sessionId = req.query.sessionId;
+  if (sessionId && sessions[sessionId]) {
+    delete sessions[sessionId];
+  }
+  res.json({ message: 'Logged out successfully.' });
 });
 
 module.exports = router;

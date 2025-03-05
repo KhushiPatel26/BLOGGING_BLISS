@@ -40,33 +40,42 @@
       $('#createBlogForm').on('submit', function(event) {
         event.preventDefault();
 
+        const sessionId = localStorage.getItem('sessionId');
+        if (!sessionId) {
+          alert('You are not logged in. Please log in first.');
+          window.location.href = 'login.html';
+          return;
+        }
+        
         const title = $('#title').val();
         const content = $('#content').val();
         const visibility = $('#visibility').val();
         const blogData = { title, content, visibility };
 
-        // API call to create a new blog post (POST /api/blogs)
-        fetch(`${API_BASE_URL}/blogs`, {
+        // Append sessionId to the URL
+        fetch(`${API_BASE_URL}/blogs?sessionId=${sessionId}`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
           body: JSON.stringify(blogData)
         })
         .then(response => {
           if (response.ok) {
-            $('#message').text('Blog created successfully!').removeClass().addClass('alert alert-success').show();
+            $('#message').text('Blog created successfully!')
+              .removeClass().addClass('alert alert-success').show();
             setTimeout(() => {
               window.location.href = 'profile.html';
             }, 2000);
           } else {
             return response.text().then(text => {
-              $('#message').text(text).removeClass().addClass('alert alert-danger').show();
+              $('#message').text(text)
+                .removeClass().addClass('alert alert-danger').show();
             });
           }
         })
         .catch(error => {
           console.error('Error creating blog:', error);
-          $('#message').text('Error during blog creation.').removeClass().addClass('alert alert-danger').show();
+          $('#message').text('Error during blog creation.')
+            .removeClass().addClass('alert alert-danger').show();
         });
       });
     });
