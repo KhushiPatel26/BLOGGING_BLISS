@@ -5,12 +5,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>User Profile - Blogging Bliss</title>
   <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" />
+  <!-- Optional: Include Font Awesome if you want the arrow icon -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" />
 </head>
 <body>
-  <div class="container"><br>
-    <button onclick="window.location.href='home.html'" class="btn btn-primary">
+  <div class="container mt-4">
+    <button onclick="window.location.href='home.html'" class="btn btn-primary mb-3">
       <i class="fas fa-arrow-left"></i> Back to Home
-    </button><br>
+    </button>
     <h1>User Profile</h1>
     <div>
       <p><strong>Name:</strong> <span id="userName">Loading...</span></p>
@@ -20,11 +22,9 @@
       <button id="editButton" class="btn btn-warning mt-3" data-toggle="modal" data-target="#editModal">Edit</button>
       <button id="changePasswordButton" class="btn btn-info mt-3" data-toggle="modal" data-target="#changePasswordModal">Change Password</button>
     </div>
-    <br>
-    <h2>Your Blogs</h2><br>
-    <a href="create_blog.html" class="btn btn-info mb-3">Create New Blog</a><br>
+    <h2 class="mt-4">Your Blogs</h2>
+    <a href="create_blog.html" class="btn btn-info mb-3">Create New Blog</a>
     <div id="userBlogs" class="row"></div>
-    <br>
     <button id="logoutButton" class="btn btn-danger mt-3">Logout</button>
   </div>
 
@@ -100,166 +100,170 @@
     </div>
   </div>
 
-  <script src="src/config.js"></script>
-  <script>
-    // Fetch user profile (GET /api/profile)
-    fetch(`${API_BASE_URL}/profile`, { credentials: 'include' })
-      .then(response => response.json())
-      .then(user => {
-        document.getElementById('userName').innerText = user.name;
-        document.getElementById('userEmail').innerText = user.email;
-        document.getElementById('userPhone').innerText = user.phone;
-        const dob = new Date(user.dob);
-        document.getElementById('userDob').innerText = dob.toLocaleDateString('en-CA');
-
-        // Pre-fill edit modal
-        document.getElementById('editName').value = user.name;
-        document.getElementById('editEmail').value = user.email;
-        document.getElementById('editPhone').value = user.phone;
-        document.getElementById('editDob').value = dob.toISOString().split('T')[0];
-
-        fetchUserBlogs(user.id);
-      })
-      .catch(error => console.error('Error fetching user data:', error));
-
-    function fetchUserBlogs(userId) {
-      // Fetch blogs for the user (GET /api/users/:userId/blogs)
-      fetch(`${API_BASE_URL}/users/${userId}/blogs`, { credentials: 'include' })
-        .then(response => {
-          if (response.status === 401) {
-            alert('You are not logged in. Redirecting to login page.');
-            window.location.href = 'login.html';
-          } else if (!response.ok) {
-            throw new Error('Failed to fetch user blogs');
-          }
-          return response.json();
-        })
-        .then(blogs => {
-          const userBlogsContainer = document.getElementById('userBlogs');
-          userBlogsContainer.innerHTML = '';
-          if (Array.isArray(blogs) && blogs.length > 0) {
-            blogs.forEach(blog => {
-              const title = blog.title || 'Untitled';
-              const content = blog.content || 'No content available';
-              const blogCard = `
-                <div class="col-md-4">
-                  <div class="card mb-4">
-                    <div class="card-body">
-                      <h5>${title}</h5>
-                      <p>${content.substring(0, 100)}...</p>
-                      <a href="view_blog.html?id=${blog.id}" class="btn btn-primary">Read More</a>
-                    </div>
-                  </div>
-                </div>
-              `;
-              userBlogsContainer.innerHTML += blogCard;
-            });
-          } else {
-            userBlogsContainer.innerHTML = '<p>No blogs available.</p>';
-          }
-        })
-        .catch(error => console.error('Error fetching user blogs:', error));
-    }
-
-    // Update profile (PUT /api/profile)
-    document.getElementById('saveChanges').addEventListener('click', () => {
-      const updatedUser = {
-        name: document.getElementById('editName').value,
-        email: document.getElementById('editEmail').value,
-        phone: document.getElementById('editPhone').value,
-        dob: document.getElementById('editDob').value
-      };
-
-      if (!validateEmail(updatedUser.email)) {
-        alert('Invalid email format.');
-        return;
-      }
-      if (!validatePhone(updatedUser.phone)) {
-        alert('Invalid phone number format.');
-        return;
-      }
-
-      fetch(`${API_BASE_URL}/profile`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify(updatedUser)
-      })
-      .then(response => {
-        if (response.ok) {
-          alert('Profile updated successfully!');
-          location.reload();
-        } else {
-          alert('Error updating profile.');
-        }
-      })
-      .catch(error => console.error('Error updating user data:', error));
-    });
-
-    // Change password (POST /api/change-password)
-    document.getElementById('changePassword').addEventListener('click', () => {
-      const currentPassword = document.getElementById('currentPassword').value;
-      const newPassword = document.getElementById('newPassword').value;
-      const confirmNewPassword = document.getElementById('confirmNewPassword').value;
-
-      if (newPassword !== confirmNewPassword) {
-        alert('New passwords do not match.');
-        return;
-      }
-      if (!validatePassword(newPassword)) {
-        alert('New password must be at least 6 characters long.');
-        return;
-      }
-
-      fetch(`${API_BASE_URL}/change-password`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ currentPassword, newPassword })
-      })
-      .then(response => {
-        if (response.ok) {
-          alert('Password changed successfully!');
-          $('#changePasswordModal').modal('hide');
-        } else {
-          return response.text().then(text => alert(text));
-        }
-      })
-      .catch(error => console.error('Error changing password:', error));
-    });
-
-    function validateEmail(email) {
-      const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      return re.test(email);
-    }
-
-    function validatePhone(phone) {
-      const re = /^\d{10}$/;
-      return re.test(phone);
-    }
-
-    function validatePassword(password) {
-      return password.length >= 6;
-    }
-
-    // Logout (POST /api/logout)
-    document.getElementById('logoutButton').addEventListener('click', () => {
-      fetch(`${API_BASE_URL}/logout`, {
-        method: 'POST',
-        credentials: 'include'
-      })
-      .then(response => {
-        if (response.ok) {
-          window.location.href = 'login.html';
-        } else {
-          alert('Error logging out.');
-        }
-      })
-      .catch(error => console.error('Error logging out:', error));
-    });
-  </script>
+  <!-- Include jQuery, Popper, and Bootstrap JS BEFORE your custom script -->
   <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.0.7/dist/umd/popper.min.js"></script>
   <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+  <script src="src/config.js"></script>
+  <script>
+    $(document).ready(function() {
+      // Fetch user profile (GET /api/profile)
+      fetch(`${API_BASE_URL}/profile`, { credentials: 'include' })
+        .then(response => response.json())
+        .then(user => {
+          $('#userName').text(user.name);
+          $('#userEmail').text(user.email);
+          $('#userPhone').text(user.phone);
+          const dob = new Date(user.dob);
+          $('#userDob').text(dob.toLocaleDateString('en-CA'));
+
+          // Pre-fill edit modal
+          $('#editName').val(user.name);
+          $('#editEmail').val(user.email);
+          $('#editPhone').val(user.phone);
+          $('#editDob').val(dob.toISOString().split('T')[0]);
+
+          fetchUserBlogs(user.id);
+        })
+        .catch(error => console.error('Error fetching user data:', error));
+
+      function fetchUserBlogs(userId) {
+        // Fetch blogs for the user (GET /api/users/:userId/blogs)
+        fetch(`${API_BASE_URL}/users/${userId}/blogs`, { credentials: 'include' })
+          .then(response => {
+            if (response.status === 401) {
+              alert('You are not logged in. Redirecting to login page.');
+              window.location.href = 'login.html';
+            } else if (!response.ok) {
+              throw new Error('Failed to fetch user blogs');
+            }
+            return response.json();
+          })
+          .then(blogs => {
+            const userBlogsContainer = $('#userBlogs');
+            userBlogsContainer.empty();
+            if (Array.isArray(blogs) && blogs.length > 0) {
+              blogs.forEach(blog => {
+                const title = blog.title || 'Untitled';
+                const content = blog.content || 'No content available';
+                const blogCard = `
+                  <div class="col-md-4">
+                    <div class="card mb-4">
+                      <div class="card-body">
+                        <h5>${title}</h5>
+                        <p>${content.substring(0, 100)}...</p>
+                        <a href="view_blog.html?id=${blog.id}" class="btn btn-primary">Read More</a>
+                      </div>
+                    </div>
+                  </div>
+                `;
+                userBlogsContainer.append(blogCard);
+              });
+            } else {
+              userBlogsContainer.html('<p>No blogs available.</p>');
+            }
+          })
+          .catch(error => console.error('Error fetching user blogs:', error));
+      }
+
+      // Update profile (PUT /api/profile)
+      $('#saveChanges').click(() => {
+        const updatedUser = {
+          name: $('#editName').val(),
+          email: $('#editEmail').val(),
+          phone: $('#editPhone').val(),
+          dob: $('#editDob').val()
+        };
+
+        if (!validateEmail(updatedUser.email)) {
+          alert('Invalid email format.');
+          return;
+        }
+        if (!validatePhone(updatedUser.phone)) {
+          alert('Invalid phone number format.');
+          return;
+        }
+
+        fetch(`${API_BASE_URL}/profile`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify(updatedUser)
+        })
+        .then(response => {
+          if (response.ok) {
+            alert('Profile updated successfully!');
+            // Optionally, update the DOM with new data here instead of reloading
+            location.reload();
+          } else {
+            alert('Error updating profile.');
+          }
+        })
+        .catch(error => console.error('Error updating user data:', error));
+      });
+
+      // Change password (POST /api/change-password)
+      $('#changePassword').click(() => {
+        const currentPassword = $('#currentPassword').val();
+        const newPassword = $('#newPassword').val();
+        const confirmNewPassword = $('#confirmNewPassword').val();
+
+        if (newPassword !== confirmNewPassword) {
+          alert('New passwords do not match.');
+          return;
+        }
+        if (!validatePassword(newPassword)) {
+          alert('New password must be at least 6 characters long.');
+          return;
+        }
+
+        fetch(`${API_BASE_URL}/change-password`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ currentPassword, newPassword })
+        })
+        .then(response => {
+          if (response.ok) {
+            alert('Password changed successfully!');
+            $('#changePasswordModal').modal('hide');
+          } else {
+            response.text().then(text => alert(text));
+          }
+        })
+        .catch(error => console.error('Error changing password:', error));
+      });
+
+      function validateEmail(email) {
+        const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return re.test(email);
+      }
+
+      function validatePhone(phone) {
+        const re = /^\d{10}$/;
+        return re.test(phone);
+      }
+
+      function validatePassword(password) {
+        return password.length >= 6;
+      }
+
+      // Logout (POST /api/logout)
+      $('#logoutButton').click(() => {
+        fetch(`${API_BASE_URL}/logout`, {
+          method: 'POST',
+          credentials: 'include'
+        })
+        .then(response => {
+          if (response.ok) {
+            window.location.href = 'login.html';
+          } else {
+            alert('Error logging out.');
+          }
+        })
+        .catch(error => console.error('Error logging out:', error));
+      });
+    });
+  </script>
 </body>
 </html>

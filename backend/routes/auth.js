@@ -10,6 +10,10 @@ const isAuthenticated = (req, res, next) => {
     next();
 };
 
+// ----------------------
+// AUTHENTICATION & USER ENDPOINTS
+// ----------------------
+
 // Signup endpoint
 router.post('/signup', (req, res) => {
     const { name, email, password, phone, dob } = req.body;
@@ -90,7 +94,7 @@ router.get('/profile', isAuthenticated, (req, res) => {
     });
 });
 
-// Update user profile
+// Update user profile (returns updated data for immediate display)
 router.put('/profile', isAuthenticated, (req, res) => {
     const { name, email, phone, dob } = req.body;
     const sql = 'UPDATE users SET name = ?, email = ?, phone = ?, dob = ? WHERE id = ?';
@@ -100,7 +104,18 @@ router.put('/profile', isAuthenticated, (req, res) => {
             console.error('Error updating user information:', err);
             return res.status(500).json({ error: 'Error updating user information.' });
         }
-        res.json({ message: 'User information updated successfully.' });
+        // Fetch updated profile data
+        const selectSql = 'SELECT id, name, email, phone, dob FROM users WHERE id = ?';
+        db.query(selectSql, [req.session.userId], (err, results) => {
+            if (err) {
+                console.error('Error fetching updated user profile:', err);
+                return res.status(500).json({ error: 'User updated but error fetching updated info.' });
+            }
+            if (results.length === 0) {
+                return res.status(404).json({ error: 'User not found after update.' });
+            }
+            res.json({ message: 'User information updated successfully.', user: results[0] });
+        });
     });
 });
 

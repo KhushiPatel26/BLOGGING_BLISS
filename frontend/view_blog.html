@@ -7,7 +7,7 @@
   <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" />
 </head>
 <body>
-  <div class="container">
+  <div class="container mt-4">
     <button onclick="window.location.href='home.html'" class="btn btn-primary mb-3">Back to Home</button>
     <h1 id="blogTitle"></h1>
     <p id="blogContent"></p>
@@ -20,68 +20,73 @@
     <button id="addCommentButton" class="btn btn-primary">Submit Comment</button>
   </div>
 
+  <!-- Include jQuery and Bootstrap JS -->
+  <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.0.7/dist/umd/popper.min.js"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
   <script src="src/config.js"></script>
   <script>
-    // Extract the blog ID from the query string
-    const queryString = window.location.search;
-    const urlParams = new URLSearchParams(queryString);
-    const blogId = urlParams.get('id');
+    $(document).ready(function() {
+      // Extract the blog ID from the query string
+      const urlParams = new URLSearchParams(window.location.search);
+      const blogId = urlParams.get('id');
 
-    // Fetch blog details (GET /api/blogs/:id)
-    fetch(`${API_BASE_URL}/blogs/${blogId}`, { credentials: 'include' })
-      .then(response => response.json())
-      .then(blog => {
-          document.getElementById('blogTitle').innerText = blog.title;
-          document.getElementById('blogContent').innerText = blog.content;
-          // After fetching the blog, load its comments
-          fetchComments();
-      })
-      .catch(error => console.error('Error fetching blog:', error));
-
-    // Function to fetch and display comments (GET /api/blogs/:id/comments)
-    function fetchComments() {
-      fetch(`${API_BASE_URL}/blogs/${blogId}/comments`, { credentials: 'include' })
+      // Fetch blog details (GET /api/blogs/:id)
+      fetch(`${API_BASE_URL}/blogs/${blogId}`, { credentials: 'include' })
         .then(response => response.json())
-        .then(comments => {
-          const commentsList = document.getElementById('commentsList');
-          commentsList.innerHTML = ''; // Clear previous comments
-          comments.forEach(comment => {
-            const commentDiv = document.createElement('div');
-            commentDiv.classList.add("mb-2", "p-2", "border", "rounded");
-
-            // Display commenter's name if available, otherwise "Anonymous"
-            commentDiv.innerHTML = `<strong>${comment.name || 'Anonymous'}</strong>: ${comment.content}<br>
-                                    <small>${new Date(comment.created_at).toLocaleString()}</small>`;
-            commentsList.appendChild(commentDiv);
-          });
+        .then(blog => {
+            $('#blogTitle').text(blog.title);
+            $('#blogContent').text(blog.content);
+            // Load comments after fetching the blog
+            fetchComments();
         })
-        .catch(error => console.error('Error fetching comments:', error));
-    }
+        .catch(error => console.error('Error fetching blog:', error));
 
-    // Add a comment (POST /api/blogs/:id/comments)
-    document.getElementById('addCommentButton').addEventListener('click', () => {
-      const content = document.getElementById('commentInput').value;
-      if (!content.trim()) {
-        alert('Please enter a comment.');
-        return;
+      // Function to fetch and display comments (GET /api/blogs/:id/comments)
+      function fetchComments() {
+        fetch(`${API_BASE_URL}/blogs/${blogId}/comments`, { credentials: 'include' })
+          .then(response => response.json())
+          .then(comments => {
+            const commentsList = $('#commentsList');
+            commentsList.empty(); // Clear previous comments
+            comments.forEach(comment => {
+              const commentDiv = $(`
+                <div class="mb-2 p-2 border rounded">
+                  <strong>${comment.name || 'Anonymous'}</strong>: ${comment.content}<br>
+                  <small>${new Date(comment.created_at).toLocaleString()}</small>
+                </div>
+              `);
+              commentsList.append(commentDiv);
+            });
+          })
+          .catch(error => console.error('Error fetching comments:', error));
       }
 
-      fetch(`${API_BASE_URL}/blogs/${blogId}/comments`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ content })
-      })
-      .then(response => {
-        if (response.ok) {
-          alert('Comment submitted successfully!');
-          document.getElementById('commentInput').value = ''; // Clear the input field
-          fetchComments(); // Refresh the comments list
-        } else {
-          response.text().then(text => alert('Error submitting comment: ' + text));
+      // Add a comment (POST /api/blogs/:id/comments)
+      $('#addCommentButton').on('click', function() {
+        const content = $('#commentInput').val();
+        if (!content.trim()) {
+          alert('Please enter a comment.');
+          return;
         }
-      })
-      .catch(error => console.error('Error submitting comment:', error));
+
+        fetch(`${API_BASE_URL}/blogs/${blogId}/comments`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ content })
+        })
+        .then(response => {
+          if (response.ok) {
+            alert('Comment submitted successfully!');
+            $('#commentInput').val(''); // Clear the input field
+            fetchComments(); // Refresh comments
+          } else {
+            response.text().then(text => alert('Error submitting comment: ' + text));
+          }
+        })
+        .catch(error => console.error('Error submitting comment:', error));
+      });
     });
   </script>
 </body>
