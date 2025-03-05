@@ -7,9 +7,8 @@
   <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" />
 </head>
 <body>
-  <div class="container">
+  <div class="container mt-4">
     <h1>Create New Blog</h1>
-    <!-- Message display -->
     <div id="message" class="alert" style="display: none;"></div>
     <form id="createBlogForm" method="POST">
       <div class="form-group">
@@ -31,44 +30,44 @@
     </form>
   </div>
 
+  <!-- Include jQuery and Bootstrap JS -->
+  <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.0.7/dist/umd/popper.min.js"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
   <script src="src/config.js"></script>
   <script>
-    document.getElementById('createBlogForm').addEventListener('submit', function(event) {
-      event.preventDefault();
+    $(document).ready(function() {
+      $('#createBlogForm').on('submit', function(event) {
+        event.preventDefault();
 
-      const title = document.getElementById('title').value;
-      const content = document.getElementById('content').value;
-      const visibility = document.getElementById('visibility').value;
-      const blogData = { title, content, visibility };
+        const title = $('#title').val();
+        const content = $('#content').val();
+        const visibility = $('#visibility').val();
+        const blogData = { title, content, visibility };
 
-      // API call to create a new blog post (POST /api/blogs)
-      fetch(`${API_BASE_URL}/blogs`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify(blogData)
-      })
-      .then(response => {
-        if (response.ok) {
-          document.getElementById('message').innerText = 'Blog created successfully!';
-          document.getElementById('message').className = 'alert alert-success';
-          document.getElementById('message').style.display = 'block';
-          setTimeout(() => {
-            window.location.href = 'profile.html';
-          }, 2000);
-        } else {
-          return response.text().then(text => {
-            document.getElementById('message').innerText = text;
-            document.getElementById('message').className = 'alert alert-danger';
-            document.getElementById('message').style.display = 'block';
-          });
-        }
-      })
-      .catch(error => {
-        console.error('Error creating blog:', error);
-        document.getElementById('message').innerText = 'Error during blog creation.';
-        document.getElementById('message').className = 'alert alert-danger';
-        document.getElementById('message').style.display = 'block';
+        // API call to create a new blog post (POST /api/blogs)
+        fetch(`${API_BASE_URL}/blogs`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify(blogData)
+        })
+        .then(response => {
+          if (response.ok) {
+            $('#message').text('Blog created successfully!').removeClass().addClass('alert alert-success').show();
+            setTimeout(() => {
+              window.location.href = 'profile.html';
+            }, 2000);
+          } else {
+            return response.text().then(text => {
+              $('#message').text(text).removeClass().addClass('alert alert-danger').show();
+            });
+          }
+        })
+        .catch(error => {
+          console.error('Error creating blog:', error);
+          $('#message').text('Error during blog creation.').removeClass().addClass('alert alert-danger').show();
+        });
       });
     });
   </script>

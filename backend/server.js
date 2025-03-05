@@ -1,37 +1,44 @@
+require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
-const bodyParser = require('body-parser');
 const session = require('express-session');
 const path = require('path');
+const helmet = require('helmet');
+
 const authRoutes = require('./routes/auth');
 const blogRoutes = require('./routes/blog');
 
 const app = express();
 
-// Configure CORS to allow requests from your Vercel frontend and include credentials
+// Security middleware
+app.use(helmet());
+
+// Configure CORS to allow requests from your frontend and include credentials
 app.use(cors({
-    origin: 'https://blogging-bliss.vercel.app',
-    credentials: true,
+  origin: process.env.FRONTEND_URL || 'https://blogging-bliss.vercel.app',
+  credentials: true,
 }));
 
-app.use(bodyParser.urlencoded({ extended: true }));
-app.use(bodyParser.json());
+// Use built-in middleware for JSON and URL-encoded form data
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
-// Session configuration (for production, consider a persistent store like Redis)
+// Session configuration (consider a persistent store like Redis for production)
 app.use(session({
-    secret: 'Blogging_Bliss', // Change this to a strong secret in production
-    resave: false,
-    saveUninitialized: false,
-    cookie: { secure: false } // Set to true if serving over HTTPS
+  secret: process.env.SESSION_SECRET || 'Blogging_Bliss',
+  resave: false,
+  saveUninitialized: false,
+  cookie: { secure: false } // secure cookies in production (HTTPS)
 }));
 
-// (Optional) Serve static files if you want to host your frontend from the backend as well
+// Serve static files if you want to host your frontend from the backend
 app.use(express.static(path.join(__dirname, '../frontend')));
 
+// API routes
 app.use('/api', authRoutes);
 app.use('/api', blogRoutes);
 
-// Use the PORT environment variable provided by Render, or fallback to 3000 for local development
+// Start the server
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
