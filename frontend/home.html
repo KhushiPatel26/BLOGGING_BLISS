@@ -16,8 +16,15 @@
   
   <script src="src/config.js"></script>
   <script>
+    // Optionally include sessionId if available
+    const sessionId = localStorage.getItem('sessionId');
+    let url = `${API_BASE_URL}/blogs`;
+    if (sessionId) {
+      url += `?sessionId=${sessionId}`;
+    }
+
     // Fetch all public blogs (GET /api/blogs)
-    fetch(`${API_BASE_URL}/blogs`, { credentials: 'include' })
+    fetch(url, { credentials: 'include' })
       .then(response => response.json())
       .then(blogs => {
         const blogPostsContainer = document.getElementById('blogPosts');

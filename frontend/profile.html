@@ -19,27 +19,28 @@
       <p><strong>Email:</strong> <span id="userEmail">Loading...</span></p>
       <p><strong>Phone Number:</strong> <span id="userPhone">Loading...</span></p>
       <p><strong>Date of Birth:</strong> <span id="userDob">Loading...</span></p>
-      <button id="editButton" class="btn btn-warning mt-3" data-toggle="modal" data-target="#editModal">Edit</button>
+      <button id="editProfileButton" class="btn btn-warning mt-3" data-toggle="modal" data-target="#editProfileModal">Edit Profile</button>
       <button id="changePasswordButton" class="btn btn-info mt-3" data-toggle="modal" data-target="#changePasswordModal">Change Password</button>
     </div>
+    
     <h2 class="mt-4">Your Blogs</h2>
     <a href="create_blog.html" class="btn btn-info mb-3">Create New Blog</a>
     <div id="userBlogs" class="row"></div>
     <button id="logoutButton" class="btn btn-danger mt-3">Logout</button>
   </div>
 
-  <!-- Edit Modal -->
-  <div class="modal fade" id="editModal" tabindex="-1" role="dialog" aria-labelledby="editModalLabel" aria-hidden="true">
+  <!-- Edit Profile Modal -->
+  <div class="modal fade" id="editProfileModal" tabindex="-1" role="dialog" aria-labelledby="editProfileModalLabel" aria-hidden="true">
     <div class="modal-dialog" role="document">
       <div class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title" id="editModalLabel">Edit Profile</h5>
+          <h5 class="modal-title" id="editProfileModalLabel">Edit Profile</h5>
           <button type="button" class="close" data-dismiss="modal" aria-label="Close">
             <span aria-hidden="true">&times;</span>
           </button>
         </div>
         <div class="modal-body">
-          <form id="editForm">
+          <form id="editProfileForm">
             <div class="form-group">
               <label for="editName">Name:</label>
               <input type="text" class="form-control" id="editName" required />
@@ -60,7 +61,44 @@
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-          <button type="button" class="btn btn-primary" id="saveChanges">Save changes</button>
+          <button type="button" class="btn btn-primary" id="saveProfileChanges">Save changes</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit Blog Modal -->
+  <div class="modal fade" id="editBlogModal" tabindex="-1" role="dialog" aria-labelledby="editBlogModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="editBlogModalLabel">Edit Blog</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <form id="editBlogForm">
+            <div class="form-group">
+              <label for="editBlogTitle">Title:</label>
+              <input type="text" class="form-control" id="editBlogTitle" required />
+            </div>
+            <div class="form-group">
+              <label for="editBlogContent">Content:</label>
+              <textarea class="form-control" id="editBlogContent" required></textarea>
+            </div>
+            <div class="form-group">
+              <label for="editBlogVisibility">Visibility:</label>
+              <select class="form-control" id="editBlogVisibility">
+                <option value="public">Public</option>
+                <option value="private">Private</option>
+              </select>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+          <button type="button" class="btn btn-primary" id="saveBlogChanges">Save changes</button>
         </div>
       </div>
     </div>
@@ -107,8 +145,15 @@
   <script src="src/config.js"></script>
   <script>
     $(document).ready(function() {
-      // Fetch user profile (GET /api/profile)
-      fetch(`${API_BASE_URL}/profile`, { credentials: 'include' })
+      const sessionId = localStorage.getItem('sessionId');
+      if (!sessionId) {
+        alert('You are not logged in. Redirecting to login page.');
+        window.location.href = 'login.html';
+        return;
+      }
+      
+      // Fetch user profile using sessionId
+      fetch(`${API_BASE_URL}/profile?sessionId=${sessionId}`)
         .then(response => response.json())
         .then(user => {
           $('#userName').text(user.name);
@@ -117,19 +162,20 @@
           const dob = new Date(user.dob);
           $('#userDob').text(dob.toLocaleDateString('en-CA'));
 
-          // Pre-fill edit modal
+          // Pre-fill edit profile modal
           $('#editName').val(user.name);
           $('#editEmail').val(user.email);
           $('#editPhone').val(user.phone);
           $('#editDob').val(dob.toISOString().split('T')[0]);
 
+          // Load user blogs
           fetchUserBlogs(user.id);
         })
         .catch(error => console.error('Error fetching user data:', error));
 
+      // Fetch user blogs
       function fetchUserBlogs(userId) {
-        // Fetch blogs for the user (GET /api/users/:userId/blogs)
-        fetch(`${API_BASE_URL}/users/${userId}/blogs`, { credentials: 'include' })
+        fetch(`${API_BASE_URL}/users/${userId}/blogs?sessionId=${sessionId}`)
           .then(response => {
             if (response.status === 401) {
               alert('You are not logged in. Redirecting to login page.');
@@ -147,12 +193,14 @@
                 const title = blog.title || 'Untitled';
                 const content = blog.content || 'No content available';
                 const blogCard = `
-                  <div class="col-md-4">
+                  <div class="col-md-4" id="blog-${blog.id}">
                     <div class="card mb-4">
                       <div class="card-body">
                         <h5>${title}</h5>
                         <p>${content.substring(0, 100)}...</p>
                         <a href="view_blog.html?id=${blog.id}" class="btn btn-primary">Read More</a>
+                        <button class="btn btn-warning edit-blog" data-id="${blog.id}">Edit</button>
+                        <button class="btn btn-danger delete-blog" data-id="${blog.id}">Delete</button>
                       </div>
                     </div>
                   </div>
@@ -166,8 +214,8 @@
           .catch(error => console.error('Error fetching user blogs:', error));
       }
 
-      // Update profile (PUT /api/profile)
-      $('#saveChanges').click(() => {
+      // Update profile
+      $('#saveProfileChanges').click(() => {
         const updatedUser = {
           name: $('#editName').val(),
           email: $('#editEmail').val(),
@@ -184,16 +232,14 @@
           return;
         }
 
-        fetch(`${API_BASE_URL}/profile`, {
+        fetch(`${API_BASE_URL}/profile?sessionId=${sessionId}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
           body: JSON.stringify(updatedUser)
         })
         .then(response => {
           if (response.ok) {
             alert('Profile updated successfully!');
-            // Optionally, update the DOM with new data here instead of reloading
             location.reload();
           } else {
             alert('Error updating profile.');
@@ -202,7 +248,67 @@
         .catch(error => console.error('Error updating user data:', error));
       });
 
-      // Change password (POST /api/change-password)
+      // Edit blog (open modal and load blog data)
+      $(document).on('click', '.edit-blog', function() {
+        const blogId = $(this).data('id');
+        // Fetch blog details
+        fetch(`${API_BASE_URL}/blogs/${blogId}?sessionId=${sessionId}`)
+          .then(response => response.json())
+          .then(blog => {
+            $('#editBlogTitle').val(blog.title);
+            $('#editBlogContent').val(blog.content);
+            $('#editBlogVisibility').val(blog.visibility);
+            $('#editBlogModal').data('blogId', blogId).modal('show');
+          })
+          .catch(error => console.error('Error fetching blog for edit:', error));
+      });
+
+      // Save changes for blog update
+      $('#saveBlogChanges').click(() => {
+        const blogId = $('#editBlogModal').data('blogId');
+        const updatedBlog = {
+          title: $('#editBlogTitle').val(),
+          content: $('#editBlogContent').val(),
+          visibility: $('#editBlogVisibility').val()
+        };
+
+        fetch(`${API_BASE_URL}/blogs/${blogId}?sessionId=${sessionId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(updatedBlog)
+        })
+        .then(response => {
+          if (response.ok) {
+            alert('Blog updated successfully!');
+            $('#editBlogModal').modal('hide');
+            fetchUserBlogs(); // refresh the blogs list
+          } else {
+            alert('Error updating blog.');
+          }
+        })
+        .catch(error => console.error('Error updating blog:', error));
+      });
+
+      // Delete blog
+      $(document).on('click', '.delete-blog', function() {
+        if (!confirm('Are you sure you want to delete this blog?')) return;
+        const blogId = $(this).data('id');
+
+        fetch(`${API_BASE_URL}/blogs/${blogId}?sessionId=${sessionId}`, {
+          method: 'DELETE'
+        })
+        .then(response => {
+          if (response.ok) {
+            alert('Blog deleted successfully!');
+            $(`#blog-${blogId}`).remove();
+          } else {
+            alert('Error deleting blog.');
+          }
+        })
+        .catch(error => console.error('Error deleting blog:', error));
+      });
+
+      // Change password
       $('#changePassword').click(() => {
         const currentPassword = $('#currentPassword').val();
         const newPassword = $('#newPassword').val();
@@ -217,10 +323,9 @@
           return;
         }
 
-        fetch(`${API_BASE_URL}/change-password`, {
+        fetch(`${API_BASE_URL}/change-password?sessionId=${sessionId}`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
           body: JSON.stringify({ currentPassword, newPassword })
         })
         .then(response => {
@@ -234,6 +339,23 @@
         .catch(error => console.error('Error changing password:', error));
       });
 
+      // Logout
+      $('#logoutButton').click(() => {
+        fetch(`${API_BASE_URL}/logout?sessionId=${sessionId}`, {
+          method: 'POST'
+        })
+        .then(response => {
+          if (response.ok) {
+            localStorage.removeItem('sessionId');
+            window.location.href = 'login.html';
+          } else {
+            alert('Error logging out.');
+          }
+        })
+        .catch(error => console.error('Error logging out:', error));
+      });
+
+      // Utility functions
       function validateEmail(email) {
         const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         return re.test(email);
@@ -247,22 +369,6 @@
       function validatePassword(password) {
         return password.length >= 6;
       }
-
-      // Logout (POST /api/logout)
-      $('#logoutButton').click(() => {
-        fetch(`${API_BASE_URL}/logout`, {
-          method: 'POST',
-          credentials: 'include'
-        })
-        .then(response => {
-          if (response.ok) {
-            window.location.href = 'login.html';
-          } else {
-            alert('Error logging out.');
-          }
-        })
-        .catch(error => console.error('Error logging out:', error));
-      });
     });
   </script>
 </body>

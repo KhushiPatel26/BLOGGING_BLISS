@@ -52,10 +52,19 @@
       })
       .then(response => {
         if (response.ok) {
+          return response.json();
+        } else {
+          return response.text().then(text => { throw new Error(text); });
+        }
+      })
+      .then(data => {
+        // Save session ID to localStorage for subsequent API calls
+        if (data.sessionId) {
+          localStorage.setItem('sessionId', data.sessionId);
           showMessage('Login successful!', 'alert-success');
           window.location.href = 'home.html';
         } else {
-          return response.text().then(text => showMessage(text, 'alert-danger'));
+          showMessage('Login failed: session ID missing.', 'alert-danger');
         }
       })
       .catch(error => showMessage('Error during login: ' + error.message, 'alert-danger'));

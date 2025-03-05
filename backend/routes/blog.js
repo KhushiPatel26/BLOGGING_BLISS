@@ -1,16 +1,19 @@
-// blog.js (Blog and Comment endpoints)
+// blog.js
 const express = require('express');
 const router = express.Router();
 const db = require('../db');
+const sessions = require('./sessions');
 
 // Create a new blog
 router.post('/blogs', (req, res) => {
-  if (!req.session.userId) {
-    return res.status(401).json({ error: 'Unauthorized access. User is not logged in.' });
+  const sessionId = req.query.sessionId;
+  if (!sessionId || !sessions[sessionId]) {
+    return res.status(401).json({ error: 'Unauthorized access. No valid session.' });
   }
+  const userId = sessions[sessionId];
   const { title, content, visibility } = req.body;
   const sql = `INSERT INTO blogs (title, content, visibility, userId) VALUES (?, ?, ?, ?)`;
-  db.query(sql, [title, content, visibility, req.session.userId], (err, result) => {
+  db.query(sql, [title, content, visibility, userId], (err, result) => {
     if (err) {
       console.error('Error creating blog:', err);
       return res.status(500).json({ error: 'Error occurred while creating the blog.' });
@@ -58,15 +61,15 @@ router.get('/blogs/:id', (req, res) => {
 
 // Update a blog by id (only if the logged-in user is the author)
 router.put('/blogs/:id', (req, res) => {
-  if (!req.session.userId) {
-    return res.status(401).json({ error: 'Unauthorized access. User is not logged in.' });
+  const sessionId = req.query.sessionId;
+  if (!sessionId || !sessions[sessionId]) {
+    return res.status(401).json({ error: 'Unauthorized access. No valid session.' });
   }
+  const userId = sessions[sessionId];
   const blogId = req.params.id;
   const { title, content, visibility } = req.body;
-
-  // Check if the blog exists and belongs to the logged-in user
   const checkSql = 'SELECT * FROM blogs WHERE id = ? AND userId = ?';
-  db.query(checkSql, [blogId, req.session.userId], (err, results) => {
+  db.query(checkSql, [blogId, userId], (err, results) => {
     if (err) {
       console.error('Error fetching blog for update:', err);
       return res.status(500).json({ error: 'Error occurred while updating the blog.' });
@@ -74,7 +77,6 @@ router.put('/blogs/:id', (req, res) => {
     if (results.length === 0) {
       return res.status(403).json({ error: 'You are not authorized to edit this blog.' });
     }
-    // Update the blog
     const updateSql = 'UPDATE blogs SET title = ?, content = ?, visibility = ? WHERE id = ?';
     db.query(updateSql, [title, content, visibility, blogId], (err) => {
       if (err) {
@@ -88,12 +90,14 @@ router.put('/blogs/:id', (req, res) => {
 
 // Delete a blog by id (only if the logged-in user is the author)
 router.delete('/blogs/:id', (req, res) => {
-  if (!req.session.userId) {
-    return res.status(401).json({ error: 'Unauthorized access. User is not logged in.' });
+  const sessionId = req.query.sessionId;
+  if (!sessionId || !sessions[sessionId]) {
+    return res.status(401).json({ error: 'Unauthorized access. No valid session.' });
   }
+  const userId = sessions[sessionId];
   const blogId = req.params.id;
   const checkSql = 'SELECT * FROM blogs WHERE id = ? AND userId = ?';
-  db.query(checkSql, [blogId, req.session.userId], (err, results) => {
+  db.query(checkSql, [blogId, userId], (err, results) => {
     if (err) {
       console.error('Error fetching blog for deletion:', err);
       return res.status(500).json({ error: 'Error occurred while deleting the blog.' });
@@ -101,7 +105,6 @@ router.delete('/blogs/:id', (req, res) => {
     if (results.length === 0) {
       return res.status(403).json({ error: 'You are not authorized to delete this blog.' });
     }
-    // Delete the blog
     const deleteSql = 'DELETE FROM blogs WHERE id = ?';
     db.query(deleteSql, [blogId], (err) => {
       if (err) {
@@ -115,12 +118,14 @@ router.delete('/blogs/:id', (req, res) => {
 
 // Retrieve blogs for the authenticated user
 router.get('/users/:userId/blogs', (req, res) => {
-  if (!req.session.userId) {
-    return res.status(401).json({ error: 'Unauthorized access. User is not logged in.' });
+  const sessionId = req.query.sessionId;
+  if (!sessionId || !sessions[sessionId]) {
+    return res.status(401).json({ error: 'Unauthorized access. No valid session.' });
   }
-  // We use the session's userId to ensure the user only sees their own blogs
+  // Use the user ID from our session store (ignoring the userId parameter)
+  const userId = sessions[sessionId];
   const sql = 'SELECT id, title, content, created_at FROM blogs WHERE userId = ? ORDER BY created_at DESC';
-  db.query(sql, [req.session.userId], (err, blogs) => {
+  db.query(sql, [userId], (err, blogs) => {
     if (err) {
       console.error('Error fetching user blogs:', err);
       return res.status(500).json({ error: 'Error fetching blogs.' });
@@ -135,13 +140,15 @@ router.get('/users/:userId/blogs', (req, res) => {
 
 // Save a comment for a blog
 router.post('/blogs/:id/comments', (req, res) => {
-  if (!req.session.userId) {
-    return res.status(401).json({ error: 'Unauthorized access. User is not logged in.' });
+  const sessionId = req.query.sessionId;
+  if (!sessionId || !sessions[sessionId]) {
+    return res.status(401).json({ error: 'Unauthorized access. No valid session.' });
   }
+  const userId = sessions[sessionId];
   const blogId = req.params.id;
   const { content } = req.body;
   const sql = `INSERT INTO comments (userId, blogId, content) VALUES (?, ?, ?)`;
-  db.query(sql, [req.session.userId, blogId, content], (err, result) => {
+  db.query(sql, [userId, blogId, content], (err, result) => {
     if (err) {
       console.error('Error saving comment:', err);
       return res.status(500).json({ error: 'Error saving comment.' });
