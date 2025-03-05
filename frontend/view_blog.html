@@ -57,13 +57,32 @@
             const commentsList = $('#commentsList');
             commentsList.empty();
             comments.forEach(comment => {
-              const commentDiv = $(`
+            // Convert the MySQL datetime string (e.g., "2025-03-05 11:59:13") into a JavaScript Date object
+            const dateObj = new Date(comment.created_at);
+
+            // Format the date portion
+            const formattedDate = dateObj.toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'long',   // "long" => "March", "short" => "Mar"
+                day: 'numeric'
+            });
+
+            // Format the time portion (12-hour clock with AM/PM)
+            const formattedTime = dateObj.toLocaleTimeString('en-US', {
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit', // include seconds if you wish
+                hour12: true
+            });
+
+            // Combine them however you like in your HTML
+            const commentDiv = $(`
                 <div class="mb-2 p-2 border rounded">
-                  <strong>${comment.commenter || 'Anonymous'}</strong>: ${comment.content}<br>
-                  <small>${new Date(comment.created_at).toLocaleString()}</small>
+                <strong>${comment.commenter || 'Anonymous'}</strong>: ${comment.content}<br>
+                <small>${formattedDate} at ${formattedTime}</small>
                 </div>
-              `);
-              commentsList.append(commentDiv);
+            `);
+            commentsList.append(commentDiv);
             });
           })
           .catch(error => console.error('Error fetching comments:', error));
