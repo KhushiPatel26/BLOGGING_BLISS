@@ -1,127 +1,122 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Signup - Blogging Bliss</title>
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Signup - Blogging Bliss</title>
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" />
 </head>
 <body>
-    <div class="container">
-        <h1>Signup</h1>
-        <div id="message" class="alert" style="display: none;"></div>
-        <form id="signupForm">
-            <div class="form-group">
-                <label for="name">Name:</label>
-                <input type="text" class="form-control" id="name" name="name" required>
-            </div>
-            <div class="form-group">
-                <label for="email">Email:</label>
-                <input type="email" class="form-control" id="email" name="email" required>
-            </div>
-            <div class="form-group">
-                <label for="password">Password:</label>
-                <input type="password" class="form-control" id="password" name="password" required>
-            </div>
-            <div class="form-group">
-                <label for="phone">Phone Number:</label>
-                <input type="text" class="form-control" id="phone" name="phone" required>
-            </div>
-            <div class="form-group">
-                <label for="dob">Date of Birth:</label>
-                <input type="date" class="form-control" id="dob" name="dob" required>
-            </div>
-            <button type="submit" class="btn btn-primary">Signup</button>
-        </form>
-    </div>
+  <div class="container">
+    <h1>Signup</h1>
+    <div id="message" class="alert" style="display: none;"></div>
+    <form id="signupForm">
+      <div class="form-group">
+        <label for="name">Name:</label>
+        <input type="text" class="form-control" id="name" name="name" required />
+      </div>
+      <div class="form-group">
+        <label for="email">Email:</label>
+        <input type="email" class="form-control" id="email" name="email" required />
+      </div>
+      <div class="form-group">
+        <label for="password">Password:</label>
+        <input type="password" class="form-control" id="password" name="password" required />
+      </div>
+      <div class="form-group">
+        <label for="phone">Phone Number:</label>
+        <input type="text" class="form-control" id="phone" name="phone" required />
+      </div>
+      <div class="form-group">
+        <label for="dob">Date of Birth:</label>
+        <input type="date" class="form-control" id="dob" name="dob" required />
+      </div>
+      <button type="submit" class="btn btn-primary">Signup</button>
+    </form>
+  </div>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const dobInput = document.getElementById('dob');
-            const today = new Date();
+  <script>
+    const API_BASE_URL = "https://blogging-bliss.onrender.com/api";
 
-            // Form submission handling
-            document.getElementById('signupForm').addEventListener('submit', function(event) {
-                event.preventDefault();
-                const name = document.getElementById('name').value;
-                const email = document.getElementById('email').value;
-                const password = document.getElementById('password').value;
-                const phone = document.getElementById('phone').value;
-                const dob = document.getElementById('dob').value;
-                const messageDiv = document.getElementById('message');
+    document.addEventListener('DOMContentLoaded', () => {
+      const today = new Date();
 
-                // Reset message
-                messageDiv.style.display = 'none';
-                messageDiv.className = 'alert';
+      document.getElementById('signupForm').addEventListener('submit', function(event) {
+        event.preventDefault();
+        const name = document.getElementById('name').value;
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
+        const phone = document.getElementById('phone').value;
+        const dob = document.getElementById('dob').value;
+        const messageDiv = document.getElementById('message');
 
-                // Validate inputs
-                if (!validateEmail(email)) {
-                    showMessage('Invalid email format.', 'alert-danger');
-                    return;
-                }
-                if (!validatePhone(phone)) {
-                    showMessage('Invalid phone number format.', 'alert-danger');
-                    return;
-                }
-                if (!validatePassword(password)) {
-                    showMessage('Password must be at least 6 characters long.', 'alert-danger');
-                    return;
-                }
-                if (!isAgeValid(dob)) {
-                    showMessage('You must be at least 5 years old to register.', 'alert-danger');
-                    return;
-                }
+        messageDiv.style.display = 'none';
+        messageDiv.className = 'alert';
 
-                // Send the signup request
-                fetch('/api/signup', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ name, email, password, phone, dob })
-                })
-                .then(response => {
-                    if (response.ok) {
-                        showMessage('Signup successful!', 'alert-success');
-                        window.location.href = 'login.html'; // Redirect to login page
-                    } else {
-                        return response.text().then(text => showMessage(text, 'alert-danger'));
-                    }
-                })
-                .catch(error => showMessage('Error during signup: ' + error.message, 'alert-danger'));
-            });
+        if (!validateEmail(email)) {
+          showMessage('Invalid email format.', 'alert-danger');
+          return;
+        }
+        if (!validatePhone(phone)) {
+          showMessage('Invalid phone number format.', 'alert-danger');
+          return;
+        }
+        if (!validatePassword(password)) {
+          showMessage('Password must be at least 6 characters long.', 'alert-danger');
+          return;
+        }
+        if (!isAgeValid(dob)) {
+          showMessage('You must be at least 5 years old to register.', 'alert-danger');
+          return;
+        }
 
-            function showMessage(message, alertClass) {
-                const messageDiv = document.getElementById('message');
-                messageDiv.innerText = message;
-                messageDiv.className = `alert ${alertClass}`;
-                messageDiv.style.display = 'block';
+        fetch(`${API_BASE_URL}/signup`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, email, password, phone, dob })
+        })
+          .then(response => {
+            if (response.ok) {
+              showMessage('Signup successful!', 'alert-success');
+              window.location.href = 'login.html';
+            } else {
+              return response.text().then(text => showMessage(text, 'alert-danger'));
             }
+          })
+          .catch(error => showMessage('Error during signup: ' + error.message, 'alert-danger'));
+      });
 
-            function validateEmail(email) {
-                const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-                return re.test(email);
-            }
+      function showMessage(message, alertClass) {
+        const messageDiv = document.getElementById('message');
+        messageDiv.innerText = message;
+        messageDiv.className = `alert ${alertClass}`;
+        messageDiv.style.display = 'block';
+      }
 
-            function validatePhone(phone) {
-                const re = /^\d{10}$/; 
-                return re.test(phone);
-            }
+      function validateEmail(email) {
+        const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return re.test(email);
+      }
 
-            function validatePassword(password) {
-                return password.length >= 6; // Minimum password length
-            }
+      function validatePhone(phone) {
+        const re = /^\d{10}$/;
+        return re.test(phone);
+      }
 
-            function isAgeValid(dob) {
-                const dobDate = new Date(dob);
-                const age = today.getFullYear() - dobDate.getFullYear();
-                const monthDiff = today.getMonth() - dobDate.getMonth();
-                if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dobDate.getDate())) {
-                    return age >= 5; // Must be at least 5 years old
-                }
-                return age >= 5; // Must be at least 5 years old
-            }
-        });
-    </script>
+      function validatePassword(password) {
+        return password.length >= 6;
+      }
+
+      function isAgeValid(dob) {
+        const dobDate = new Date(dob);
+        let age = today.getFullYear() - dobDate.getFullYear();
+        const m = today.getMonth() - dobDate.getMonth();
+        if (m < 0 || (m === 0 && today.getDate() < dobDate.getDate())) {
+          age--;
+        }
+        return age >= 5;
+      }
+    });
+  </script>
 </body>
 </html>
