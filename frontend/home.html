@@ -16,8 +16,7 @@
   
   <script src="src/config.js"></script>
   <script>
-
-    // Fetch blogs from Render
+    // Fetch all public blogs (GET /api/blogs)
     fetch(`${API_BASE_URL}/blogs`, { credentials: 'include' })
       .then(response => response.json())
       .then(blogs => {

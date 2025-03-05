@@ -11,7 +11,6 @@
     <h1>Create New Blog</h1>
     <!-- Message display -->
     <div id="message" class="alert" style="display: none;"></div>
-    <!-- Added id for JS handling -->
     <form id="createBlogForm" method="POST">
       <div class="form-group">
         <label for="title">Title:</label>
@@ -34,45 +33,43 @@
 
   <script src="src/config.js"></script>
   <script>
-
     document.getElementById('createBlogForm').addEventListener('submit', function(event) {
       event.preventDefault();
 
       const title = document.getElementById('title').value;
       const content = document.getElementById('content').value;
       const visibility = document.getElementById('visibility').value;
-
       const blogData = { title, content, visibility };
 
-      // Use the full Render API URL with credentials
+      // API call to create a new blog post (POST /api/blogs)
       fetch(`${API_BASE_URL}/blogs`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
         body: JSON.stringify(blogData)
       })
-        .then(response => {
-          if (response.ok) {
-            document.getElementById('message').innerText = 'Blog created successfully!';
-            document.getElementById('message').className = 'alert alert-success';
-            document.getElementById('message').style.display = 'block';
-            setTimeout(() => {
-              window.location.href = 'profile.html';
-            }, 2000);
-          } else {
-            return response.text().then(text => {
-              document.getElementById('message').innerText = text;
-              document.getElementById('message').className = 'alert alert-danger';
-              document.getElementById('message').style.display = 'block';
-            });
-          }
-        })
-        .catch(error => {
-          console.error('Error creating blog:', error);
-          document.getElementById('message').innerText = 'Error during blog creation.';
-          document.getElementById('message').className = 'alert alert-danger';
+      .then(response => {
+        if (response.ok) {
+          document.getElementById('message').innerText = 'Blog created successfully!';
+          document.getElementById('message').className = 'alert alert-success';
           document.getElementById('message').style.display = 'block';
-        });
+          setTimeout(() => {
+            window.location.href = 'profile.html';
+          }, 2000);
+        } else {
+          return response.text().then(text => {
+            document.getElementById('message').innerText = text;
+            document.getElementById('message').className = 'alert alert-danger';
+            document.getElementById('message').style.display = 'block';
+          });
+        }
+      })
+      .catch(error => {
+        console.error('Error creating blog:', error);
+        document.getElementById('message').innerText = 'Error during blog creation.';
+        document.getElementById('message').className = 'alert alert-danger';
+        document.getElementById('message').style.display = 'block';
+      });
     });
   </script>
 </body>

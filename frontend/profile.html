@@ -99,9 +99,10 @@
       </div>
     </div>
   </div>
+
   <script src="src/config.js"></script>
   <script>
-    // Fetch user profile
+    // Fetch user profile (GET /api/profile)
     fetch(`${API_BASE_URL}/profile`, { credentials: 'include' })
       .then(response => response.json())
       .then(user => {
@@ -122,6 +123,7 @@
       .catch(error => console.error('Error fetching user data:', error));
 
     function fetchUserBlogs(userId) {
+      // Fetch blogs for the user (GET /api/users/:userId/blogs)
       fetch(`${API_BASE_URL}/users/${userId}/blogs`, { credentials: 'include' })
         .then(response => {
           if (response.status === 401) {
@@ -159,6 +161,7 @@
         .catch(error => console.error('Error fetching user blogs:', error));
     }
 
+    // Update profile (PUT /api/profile)
     document.getElementById('saveChanges').addEventListener('click', () => {
       const updatedUser = {
         name: document.getElementById('editName').value,
@@ -182,17 +185,18 @@
         credentials: 'include',
         body: JSON.stringify(updatedUser)
       })
-        .then(response => {
-          if (response.ok) {
-            alert('Profile updated successfully!');
-            location.reload();
-          } else {
-            alert('Error updating profile.');
-          }
-        })
-        .catch(error => console.error('Error updating user data:', error));
+      .then(response => {
+        if (response.ok) {
+          alert('Profile updated successfully!');
+          location.reload();
+        } else {
+          alert('Error updating profile.');
+        }
+      })
+      .catch(error => console.error('Error updating user data:', error));
     });
 
+    // Change password (POST /api/change-password)
     document.getElementById('changePassword').addEventListener('click', () => {
       const currentPassword = document.getElementById('currentPassword').value;
       const newPassword = document.getElementById('newPassword').value;
@@ -213,15 +217,15 @@
         credentials: 'include',
         body: JSON.stringify({ currentPassword, newPassword })
       })
-        .then(response => {
-          if (response.ok) {
-            alert('Password changed successfully!');
-            $('#changePasswordModal').modal('hide');
-          } else {
-            return response.text().then(text => alert(text));
-          }
-        })
-        .catch(error => console.error('Error changing password:', error));
+      .then(response => {
+        if (response.ok) {
+          alert('Password changed successfully!');
+          $('#changePasswordModal').modal('hide');
+        } else {
+          return response.text().then(text => alert(text));
+        }
+      })
+      .catch(error => console.error('Error changing password:', error));
     });
 
     function validateEmail(email) {
@@ -238,19 +242,20 @@
       return password.length >= 6;
     }
 
+    // Logout (POST /api/logout)
     document.getElementById('logoutButton').addEventListener('click', () => {
       fetch(`${API_BASE_URL}/logout`, {
         method: 'POST',
         credentials: 'include'
       })
-        .then(response => {
-          if (response.ok) {
-            window.location.href = 'login.html';
-          } else {
-            alert('Error logging out.');
-          }
-        })
-        .catch(error => console.error('Error logging out:', error));
+      .then(response => {
+        if (response.ok) {
+          window.location.href = 'login.html';
+        } else {
+          alert('Error logging out.');
+        }
+      })
+      .catch(error => console.error('Error logging out:', error));
     });
   </script>
   <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>

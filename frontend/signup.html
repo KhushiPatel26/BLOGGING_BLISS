@@ -36,7 +36,6 @@
   </div>
   <script src="src/config.js"></script>
   <script>
-
     document.addEventListener('DOMContentLoaded', () => {
       const today = new Date();
 
@@ -69,20 +68,21 @@
           return;
         }
 
+        // API call for signup (POST /api/signup)
         fetch(`${API_BASE_URL}/signup`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ name, email, password, phone, dob })
         })
-          .then(response => {
-            if (response.ok) {
-              showMessage('Signup successful!', 'alert-success');
-              window.location.href = 'login.html';
-            } else {
-              return response.text().then(text => showMessage(text, 'alert-danger'));
-            }
-          })
-          .catch(error => showMessage('Error during signup: ' + error.message, 'alert-danger'));
+        .then(response => {
+          if (response.ok) {
+            showMessage('Signup successful!', 'alert-success');
+            window.location.href = 'login.html';
+          } else {
+            return response.text().then(text => showMessage(text, 'alert-danger'));
+          }
+        })
+        .catch(error => showMessage('Error during signup: ' + error.message, 'alert-danger'));
       });
 
       function showMessage(message, alertClass) {

@@ -5,109 +5,162 @@ const db = require('../db');
 // Middleware to check if user is logged in
 const isAuthenticated = (req, res, next) => {
     if (!req.session.userId) {
-        return res.redirect('/login.html');
+        return res.status(401).json({ error: 'Unauthorized' });
     }
     next();
 };
 
+// ----------------------
+// BLOG ENDPOINTS
+// ----------------------
+
 // Create a new blog
 router.post('/blogs', isAuthenticated, (req, res) => {
     const { title, content, visibility } = req.body;
-
-    // Use parameterized queries to prevent SQL injection
     const sql = `INSERT INTO blogs (title, content, visibility, userId) VALUES (?, ?, ?, ?)`;
-    db.query(sql, [title, content, visibility, req.session.userId], (err) => {
+    db.query(sql, [title, content, visibility, req.session.userId], (err, result) => {
         if (err) {
-            console.error('Error creating blog:', err); // Log the error details
-            return res.status(500).send('Error occurred while creating the blog.');
+            console.error('Error creating blog:', err);
+            return res.status(500).json({ error: 'Error occurred while creating the blog.' });
         }
-        // Redirect to the profile page after successful blog creation
-        res.redirect('/profile.html');
+        res.status(201).json({ message: 'Blog created successfully', blogId: result.insertId });
     });
 });
 
-// Fetch blogs
+// Retrieve all public blogs
 router.get('/blogs', (req, res) => {
     const sql = `
         SELECT b.id, b.title, b.content, b.created_at, u.name AS authorName 
         FROM blogs b 
         JOIN users u ON b.userId = u.id 
-        WHERE b.visibility = 'public'`;
+        WHERE b.visibility = 'public'
+        ORDER BY b.created_at DESC`;
     db.query(sql, (err, blogs) => {
         if (err) {
-            res.status(500).send('Error fetching blogs.');
-            return;
+            return res.status(500).json({ error: 'Error fetching blogs.' });
         }
         res.json(blogs);
     });
 });
 
-// Fetch a specific blog by ID
+// Retrieve a single blog by id
 router.get('/blogs/:id', (req, res) => {
     const blogId = req.params.id;
-    const sql = `SELECT b.id, b.title, b.content, b.created_at, u.name AS authorName FROM blogs b JOIN users u ON b.userId = u.id WHERE b.id = ?`;
-    
+    const sql = `
+        SELECT b.id, b.title, b.content, b.created_at, u.name AS authorName 
+        FROM blogs b 
+        JOIN users u ON b.userId = u.id 
+        WHERE b.id = ?`;
     db.query(sql, [blogId], (err, results) => {
         if (err) {
-            res.status(500).send('Error fetching blog.');
-            return;
+            return res.status(500).json({ error: 'Error fetching blog.' });
         }
-        if (results.length > 0) {
-            res.json(results[0]); // Send the first result
-        } else {
-            res.status(404).send('Blog not found.');
+        if (results.length === 0) {
+            return res.status(404).json({ error: 'Blog not found.' });
         }
+        res.json(results[0]);
     });
 });
 
-// Save a comment
-router.post('/blogs/:id/comments', (req, res) => {
+// Update a blog by id (only if the logged-in user is the author)
+router.put('/blogs/:id', isAuthenticated, (req, res) => {
     const blogId = req.params.id;
-    const { content } = req.body;
+    const { title, content, visibility } = req.body;
 
-    const sql = `INSERT INTO comments (userId, blogId, content) VALUES (?, ?, ?)`;
-    db.query(sql, [req.session.userId, blogId, content], (err) => {
+    // Check if the blog exists and belongs to the logged-in user
+    const checkSql = 'SELECT * FROM blogs WHERE id = ? AND userId = ?';
+    db.query(checkSql, [blogId, req.session.userId], (err, results) => {
         if (err) {
-            res.status(500).send('Error saving comment.');
-            return;
+            console.error('Error fetching blog for update:', err);
+            return res.status(500).json({ error: 'Error occurred while updating the blog.' });
         }
-        res.status(201).send('Comment saved successfully.');
+        if (results.length === 0) {
+            return res.status(403).json({ error: 'You are not authorized to edit this blog.' });
+        }
+        // Update the blog
+        const updateSql = 'UPDATE blogs SET title = ?, content = ?, visibility = ? WHERE id = ?';
+        db.query(updateSql, [title, content, visibility, blogId], (err) => {
+            if (err) {
+                console.error('Error updating blog:', err);
+                return res.status(500).json({ error: 'Error occurred while updating the blog.' });
+            }
+            res.json({ message: 'Blog updated successfully.' });
+        });
     });
 });
 
-// Fetch comments for a specific blog
-router.get('/blogs/:id/comments', (req, res) => {
+// Delete a blog by id (only if the logged-in user is the author)
+router.delete('/blogs/:id', isAuthenticated, (req, res) => {
     const blogId = req.params.id;
-    const sql = `SELECT comments.*, users.*  
-                FROM comments  
-                JOIN users ON comments.userId = users.id  
-                WHERE comments.blogId = ? `;
-    
-    db.query(sql, [blogId], (err, comments) => {
+
+    // Check if the blog exists and belongs to the logged-in user
+    const checkSql = 'SELECT * FROM blogs WHERE id = ? AND userId = ?';
+    db.query(checkSql, [blogId, req.session.userId], (err, results) => {
         if (err) {
-            res.status(500).send('Error fetching comments.');
-            return;
+            console.error('Error fetching blog for deletion:', err);
+            return res.status(500).json({ error: 'Error occurred while deleting the blog.' });
         }
-        res.json(comments);
+        if (results.length === 0) {
+            return res.status(403).json({ error: 'You are not authorized to delete this blog.' });
+        }
+        // Delete the blog
+        const deleteSql = 'DELETE FROM blogs WHERE id = ?';
+        db.query(deleteSql, [blogId], (err) => {
+            if (err) {
+                console.error('Error deleting blog:', err);
+                return res.status(500).json({ error: 'Error occurred while deleting the blog.' });
+            }
+            res.json({ message: 'Blog deleted successfully.' });
+        });
     });
 });
 
-// Fetch user's blogs
-router.get('/users/:userId/blogs', (req, res) => {
-    // Ensure the user is authenticated
-    if (!req.session.userId) {
-        return res.status(401).send('Unauthorized');
-    }
-
+// Retrieve blogs for the authenticated user
+router.get('/users/:userId/blogs', isAuthenticated, (req, res) => {
+    // We use the session's userId to ensure the user only sees their own blogs
     const userId = req.session.userId;
-    const sql = 'SELECT id, title, content, created_at FROM blogs WHERE userId = ?';
-
+    const sql = 'SELECT id, title, content, created_at FROM blogs WHERE userId = ? ORDER BY created_at DESC';
     db.query(sql, [userId], (err, blogs) => {
         if (err) {
             console.error('Error fetching user blogs:', err);
-            return res.status(500).send('Error fetching blogs.');
+            return res.status(500).json({ error: 'Error fetching blogs.' });
         }
-        res.json(blogs); // Send the blogs as JSON response
+        res.json(blogs);
+    });
+});
+
+// ----------------------
+// COMMENT ENDPOINTS
+// ----------------------
+
+// Save a comment for a blog
+router.post('/blogs/:id/comments', isAuthenticated, (req, res) => {
+    const blogId = req.params.id;
+    const { content } = req.body;
+    const sql = `INSERT INTO comments (userId, blogId, content) VALUES (?, ?, ?)`;
+    db.query(sql, [req.session.userId, blogId, content], (err, result) => {
+        if (err) {
+            console.error('Error saving comment:', err);
+            return res.status(500).json({ error: 'Error saving comment.' });
+        }
+        res.status(201).json({ message: 'Comment saved successfully', commentId: result.insertId });
+    });
+});
+
+// Retrieve all comments for a specific blog
+router.get('/blogs/:id/comments', (req, res) => {
+    const blogId = req.params.id;
+    const sql = `
+        SELECT c.id, c.content, c.created_at, u.name AS commenter 
+        FROM comments c 
+        JOIN users u ON c.userId = u.id  
+        WHERE c.blogId = ? 
+        ORDER BY c.created_at ASC`;
+    db.query(sql, [blogId], (err, comments) => {
+        if (err) {
+            return res.status(500).json({ error: 'Error fetching comments.' });
+        }
+        res.json(comments);
     });
 });
 

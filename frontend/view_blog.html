@@ -8,38 +8,37 @@
 </head>
 <body>
   <div class="container">
-    <button onclick="window.location.href='home.html'" class="btn btn-primary">Back to Home</button>
+    <button onclick="window.location.href='home.html'" class="btn btn-primary mb-3">Back to Home</button>
     <h1 id="blogTitle"></h1>
     <p id="blogContent"></p>
 
     <h3>Comments</h3>
     <div id="commentsList"></div>
     
-    <h4>Add a Comment</h4>
-    <textarea id="commentInput" class="form-control"></textarea><br>
+    <h4 class="mt-4">Add a Comment</h4>
+    <textarea id="commentInput" class="form-control" rows="3"></textarea><br>
     <button id="addCommentButton" class="btn btn-primary">Submit Comment</button>
   </div>
 
   <script src="src/config.js"></script>
   <script>
-
     // Extract the blog ID from the query string
     const queryString = window.location.search;
     const urlParams = new URLSearchParams(queryString);
     const blogId = urlParams.get('id');
 
-    // Fetch blog details using the full API URL and include credentials
+    // Fetch blog details (GET /api/blogs/:id)
     fetch(`${API_BASE_URL}/blogs/${blogId}`, { credentials: 'include' })
       .then(response => response.json())
       .then(blog => {
           document.getElementById('blogTitle').innerText = blog.title;
           document.getElementById('blogContent').innerText = blog.content;
-          // After fetching the blog, fetch its comments
+          // After fetching the blog, load its comments
           fetchComments();
       })
       .catch(error => console.error('Error fetching blog:', error));
 
-    // Function to fetch and display comments for the blog
+    // Function to fetch and display comments (GET /api/blogs/:id/comments)
     function fetchComments() {
       fetch(`${API_BASE_URL}/blogs/${blogId}/comments`, { credentials: 'include' })
         .then(response => response.json())
@@ -48,19 +47,18 @@
           commentsList.innerHTML = ''; // Clear previous comments
           comments.forEach(comment => {
             const commentDiv = document.createElement('div');
-            commentDiv.classList.add("comment");
+            commentDiv.classList.add("mb-2", "p-2", "border", "rounded");
 
-            // Assuming the comment object contains a "name" field for the commenter's name,
-            // a "content" field, and a "created_at" timestamp.
-            commentDiv.innerHTML = `<strong>${comment.name || 'Anonymous'}</strong>: ${comment.content} <br>
-                                      <small>${new Date(comment.created_at).toLocaleString()}</small>`;
+            // Display commenter's name if available, otherwise "Anonymous"
+            commentDiv.innerHTML = `<strong>${comment.name || 'Anonymous'}</strong>: ${comment.content}<br>
+                                    <small>${new Date(comment.created_at).toLocaleString()}</small>`;
             commentsList.appendChild(commentDiv);
           });
         })
         .catch(error => console.error('Error fetching comments:', error));
     }
 
-    // Add a comment
+    // Add a comment (POST /api/blogs/:id/comments)
     document.getElementById('addCommentButton').addEventListener('click', () => {
       const content = document.getElementById('commentInput').value;
       if (!content.trim()) {
@@ -78,7 +76,7 @@
         if (response.ok) {
           alert('Comment submitted successfully!');
           document.getElementById('commentInput').value = ''; // Clear the input field
-          fetchComments(); // Refresh comments
+          fetchComments(); // Refresh the comments list
         } else {
           response.text().then(text => alert('Error submitting comment: ' + text));
         }
