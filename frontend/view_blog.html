@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>View Blog - Blogging Bliss</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+<body>
+    <div class="container">
+        <button onclick="window.location.href='home.html'" class="btn btn-primary">Back to Home</button>
+        <h1 id="blogTitle"></h1>
+        <p id="blogContent"></p>
+        <!-- <button id="saveButton" class="btn btn-secondary">Save Blog</button> -->
+
+        <h3>Comments</h3>
+        <div id="commentsList"></div>
+        
+        <h4>Add a Comment</h4>
+        <textarea id="commentInput" class="form-control"></textarea><br>
+        <button id="addCommentButton" class="btn btn-primary">Submit Comment</button>
+    </div>
+
+    <script>
+        const queryString = window.location.search;
+        const urlParams = new URLSearchParams(queryString);
+        const blogId = urlParams.get('id');
+
+        // Fetch blog details
+        fetch(`/api/blogs/${blogId}`)
+            .then(response => response.json())
+            .then(blog => {
+                document.getElementById('blogTitle').innerText = blog.title;
+                document.getElementById('blogContent').innerText = blog.content;
+
+                // Fetch and display comments for the blog
+                fetchComments();
+            })
+            .catch(error => console.error('Error fetching blog:', error));
+
+        // Function to fetch and display comments
+        function fetchComments() {
+            fetch(`/api/blogs/${blogId}/comments`)
+                .then(response => response.json())
+                .then(comments => {
+                    const commentsList = document.getElementById('commentsList');
+                    commentsList.innerHTML = ''; // Clear previous comments
+                    comments.forEach(comment => {
+                const commentDiv = document.createElement('div');
+                commentDiv.classList.add("comment");
+
+                commentDiv.innerHTML = `<strong>${comment.name}</strong>: ${comment.content} <br>
+                                        <small>${new Date(comment.created_at).toLocaleString()}</small>`;
+                
+                commentsList.appendChild(commentDiv);
+                    });
+                })
+                .catch(error => console.error('Error fetching comments:', error));
+        }
+
+        // Add a comment
+        document.getElementById('addCommentButton').addEventListener('click', () => {
+            const content = document.getElementById('commentInput').value;
+
+            fetch(`/api/blogs/${blogId}/comments`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ content })
+            })
+            .then(response => {
+                if (response.ok) {
+                    alert('Comment submitted successfully!');
+                    document.getElementById('commentInput').value = ''; // Clear the input field
+                    fetchComments(); // Refresh comments
+                } else {
+                    alert('Error submitting comment.');
+                }
+            });
+        });
+
+    </script>
+</body>
+</html>
